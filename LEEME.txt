@@ -1,0 +1,58 @@
+CERCA — App instalable (PWA)
+============================
+
+CONTENIDO DEL PAQUETE (todos los archivos deben ir en la MISMA carpeta):
+  - cerca.html            La app.
+  - manifest.webmanifest  Datos de instalación (nombre, iconos, colores).
+  - sw.js                 Service worker (permite abrir la app sin conexión).
+  - icon-192.png          Icono.
+  - icon-512.png          Icono.
+
+IMPORTANTE
+----------
+Una PWA solo se puede INSTALAR si está publicada en una URL con https.
+Abrir cerca.html con doble clic (file://) o dentro de la vista previa del chat
+NO permite instalarla: el service worker no se registra en esos casos. Hay que
+subir la carpeta a un hosting estático (gratis) y abrirla desde su dirección.
+
+PUBLICAR (elige una opción)
+---------------------------
+A) Netlify Drop (lo más rápido, sin cuenta técnica):
+   1. Entra en https://app.netlify.com/drop
+   2. Arrastra la carpeta con los 5 archivos.
+   3. Te da una URL https. Abre  TU-URL/cerca.html
+
+B) GitHub Pages:
+   1. Crea un repositorio y sube los 5 archivos.
+   2. Settings > Pages > Deploy from branch (main, carpeta raíz).
+   3. Abre  https://TU-USUARIO.github.io/TU-REPO/cerca.html
+
+Consejo: si quieres que la app esté en la raíz del sitio (TU-URL/ sin
+"cerca.html"), renombra cerca.html a index.html y cambia en manifest.webmanifest
+el valor "start_url": "cerca.html" por "start_url": "./"  (y en sw.js, "./cerca.html"
+por "./index.html").
+
+INSTALAR (una vez abierta desde la URL https)
+---------------------------------------------
+  - Android (Chrome):  menú (⋮) > "Instalar aplicación" / "Añadir a pantalla de inicio".
+  - iPhone/iPad (Safari):  Compartir > "Añadir a pantalla de inicio".
+  - PC (Chrome/Edge):  icono de instalar en la barra de direcciones (o menú > Instalar).
+
+QUÉ FUNCIONA SIN CONEXIÓN
+-------------------------
+  - La app abre offline y tus RUTAS GUARDADAS están disponibles (se guardan en el
+    navegador del dispositivo).
+  - El MAPA y la BÚSQUEDA de sitios necesitan conexión (dependen de servidores
+    externos). El mapa offline completo es una función aparte, más grande.
+
+ISÓCRONA REAL POR CARRETERAS (opcional)
+---------------------------------------
+Dentro de la app, en "Isócrona real por carreteras", puedes pegar una clave gratuita
+de OpenRouteService (https://openrouteservice.org/dev/#/signup) para calcular el
+alcance siguiendo carreteras en lugar de la aproximación por radio.
+
+NOTA PARA PRODUCCIÓN
+--------------------
+Las teselas del mapa usan el servidor público de OpenStreetMap, pensado para
+pruebas. Para uso real y estable conviene un proveedor de teselas propio
+(por ejemplo MapTiler) y sustituir la URL de teselas en cerca.html.

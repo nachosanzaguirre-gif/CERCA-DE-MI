@@ -1,0 +1,16 @@
+{
+  "name": "Cerca — descubre lo que tienes cerca",
+  "short_name": "Cerca",
+  "description": "Descubre sitios de interés cerca de ti o de camino a un destino, y crea la ruta óptima para visitarlos.",
+  "start_url": "cerca.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F3FB",
+  "theme_color": "#FF4D8D",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
