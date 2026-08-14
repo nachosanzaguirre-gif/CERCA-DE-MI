@@ -42,7 +42,7 @@
 
   .sheet{ position:fixed; z-index:500; left:0; right:0; bottom:0; padding:8px 18px calc(14px + env(safe-area-inset-bottom));
     background:var(--paper); border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:0 -12px 34px -14px rgba(23,22,53,.25);
-    max-height:86dvh; display:flex; flex-direction:column; }
+    max-height:86dvh; display:flex; flex-direction:column; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   .sheet > *{ flex:0 0 auto; }
   .sheet__handle{ width:42px; height:5px; border-radius:999px; background:var(--line); margin:4px auto 12px; }
   .search-wrap{ position:relative; margin-bottom:14px; }
@@ -92,6 +92,8 @@
   .cta:hover{ background:var(--go-deep); } .cta:active{ transform:translateY(1px); } .cta:disabled{ opacity:.55; cursor:default; box-shadow:none; } .cta svg{ width:20px; height:20px; }
 
   .adv{ margin-top:12px; }
+  .isoline{ display:flex; align-items:center; gap:10px; margin-top:12px; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; }
+  .isoline input{ width:20px; height:20px; accent-color:var(--go); cursor:pointer; }
   .adv__sum{ list-style:none; cursor:pointer; font-size:13px; font-weight:600; color:var(--go-deep); display:flex; align-items:center; gap:7px; padding:2px 0; }
   .adv__sum::-webkit-details-marker{ display:none; } .adv__sum::before{ content:"›"; font-weight:800; font-size:16px; transition:transform .18s ease; } .adv[open] .adv__sum::before{ transform:rotate(90deg); }
   .adv__body{ padding-top:10px; }
@@ -102,14 +104,27 @@
   .notice--warn{ background:rgba(245,158,11,.12); color:#92500b; } .notice--info{ background:rgba(6,182,212,.10); color:var(--go-deep); } .notice--ok{ background:rgba(16,185,129,.12); color:#0a6b4d; }
 
   /* Resultados + pestañas */
-  .results{ margin-top:14px; flex:1 1 auto; min-height:0; display:flex; flex-direction:column; } .results[hidden]{ display:none; }
+  .results{ margin-top:14px; } .results[hidden]{ display:none; }
   .tabs{ display:flex; gap:6px; margin-bottom:12px; background:var(--mist); padding:5px; border-radius:12px; flex:0 0 auto; }
   .tab{ flex:1; padding:9px; border:none; background:transparent; border-radius:8px; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s ease; }
   .tab.is-on{ background:var(--paper); color:var(--ink); box-shadow:0 2px 8px -2px rgba(23,22,53,.2); }
   .tab b{ font-weight:800; font-size:12px; padding:1px 7px; border-radius:999px; background:rgba(0,0,0,.08); } .tab.is-on b{ background:var(--go); color:#fff; }
-  .view{ display:flex; flex-direction:column; min-height:0; flex:1 1 auto; } .view[hidden]{ display:none; }
+  .view{ display:block; } .view[hidden]{ display:none; }
 
   .chips{ display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-bottom:2px; flex:0 0 auto; }
+  .filters{ margin-bottom:12px; }
+  .filters__sum{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px; padding:11px 13px; background:var(--mist); border:1px solid var(--line); border-radius:12px; font-weight:700; font-size:14px; color:var(--ink); }
+  .filters__sum::-webkit-details-marker{ display:none; }
+  .filters__sum::after{ content:"▾"; color:var(--ink-soft); margin-left:auto; transition:transform .2s ease; }
+  .filters[open] .filters__sum::after{ transform:rotate(180deg); }
+  .filters__count{ min-width:22px; height:20px; padding:0 6px; border-radius:999px; background:var(--go); color:#fff; font-size:12px; font-weight:800; display:none; align-items:center; justify-content:center; }
+  .filters__body{ padding:10px 2px 2px; }
+  .filters__adv{ display:flex; flex-direction:column; gap:2px; padding-top:8px; margin-top:6px; border-top:1px solid var(--line); }
+  .fck{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:9px; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; }
+  .fck:hover{ background:var(--mist); }
+  .fck input{ width:19px; height:19px; accent-color:var(--go); cursor:pointer; flex:0 0 auto; }
+  .fck__dot{ width:11px; height:11px; border-radius:50%; flex:0 0 auto; }
+  .fck b{ margin-left:auto; color:var(--ink-soft); font-weight:700; }
   .surprise{ flex:0 0 auto; width:100%; margin-bottom:12px; padding:12px; border:none; border-radius:12px; background:linear-gradient(100deg,var(--sun-1),var(--sun-2) 55%,var(--sun-3)); color:#fff; font-family:var(--font-body); font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(255,77,141,.6); }
   .surprise:active{ transform:translateY(1px); }
   .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:999px; font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--ink-soft); background:var(--mist); border:1px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .15s ease; }
@@ -120,7 +135,7 @@
   .sortbar__label{ font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
   .sortbar__sel{ flex:0 0 auto; font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--ink); background:var(--mist); border:1px solid var(--line); border-radius:10px; padding:7px 10px; cursor:pointer; }
 
-  .list{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .list{ display:block; }
   .poi{ display:flex; align-items:flex-start; gap:11px; padding:12px 4px; border-bottom:1px solid var(--line); }
   .poi:last-child{ border-bottom:none; } .poi:hover{ background:#fafbff; }
   .poi__dot{ width:14px; height:14px; flex:0 0 14px; border-radius:50%; margin-top:3px; box-shadow:0 0 0 3px rgba(0,0,0,.04); }
@@ -141,7 +156,7 @@
   .dest-row__rm{ border:none; background:transparent; color:var(--ink-soft); font-size:20px; cursor:pointer; }
   .trip-hint{ font-size:12px; color:var(--sun-2); margin:6px 2px 0; font-weight:600; }
   .trip-empty{ flex:0 0 auto; text-align:center; color:var(--ink-soft); font-size:13.5px; padding:22px 10px; line-height:1.5; }
-  .triplist{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .triplist{ display:block; }
   .tripitem{ display:flex; align-items:flex-start; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); } .tripitem:last-child{ border-bottom:none; }
   .tripitem__num{ flex:0 0 28px; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; color:#fff; font-family:var(--font-display); font-weight:800; font-size:13px; margin-top:1px; }
   .tripitem__num--dot{ width:14px; height:14px; flex-basis:14px; margin:6px 7px 0; }
@@ -236,15 +251,15 @@
 
   /* ---------- Escritorio: panel lateral en vez de hoja inferior ---------- */
   @media (min-width:900px){
-    #map{ left:400px; }
-    .sheet{ top:0; bottom:0; left:0; right:auto; width:400px; max-height:none; border-radius:0; border-right:1px solid var(--line); box-shadow:4px 0 24px -8px rgba(23,22,53,.18); padding:18px 20px 18px; }
+    #map{ left:360px; }
+    .sheet{ top:0; bottom:0; left:0; right:auto; width:360px; max-height:none; border-radius:0; border-right:1px solid var(--line); box-shadow:4px 0 24px -8px rgba(23,22,53,.18); padding:18px 20px 18px; }
     .sheet__handle{ display:none; }
-    .topbar{ left:calc(50% + 200px); }
+    .topbar{ left:calc(50% + 180px); }
     .recenter{ top:auto; bottom:26px; right:26px; }
     .modal{ align-items:center; }
     .modal__card{ border-radius:var(--r-lg); max-height:82vh; }
     .poicard{ border-radius:var(--r-lg); }
-    .panel-toggle{ display:grid; position:fixed; z-index:600; top:16px; left:412px; width:38px; height:38px; place-items:center; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); cursor:pointer; transition:left .28s ease; }
+    .panel-toggle{ display:grid; position:fixed; z-index:600; top:16px; left:372px; width:38px; height:38px; place-items:center; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); cursor:pointer; transition:left .28s ease; }
     .panel-toggle svg{ width:20px; height:20px; transition:transform .2s ease; }
     body.panel-collapsed #map{ left:0; }
     body.panel-collapsed .sheet{ transform:translateX(-100%); }
@@ -301,12 +316,13 @@
     </div>
 
     <button class="cta" id="reachBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Buscar sitios</button>
+    <label class="isoline"><input type="checkbox" id="isoToggle" checked><span>🛣️ Isócrona real por carretera</span></label>
 
     <details class="adv" id="adv">
-      <summary class="adv__sum">Isócrona real por carreteras · clave OpenRouteService</summary>
+      <summary class="adv__sum">Clave OpenRouteService (cambiar la incluida)</summary>
       <div class="adv__body">
-        <input class="adv__key" id="orsKey" type="password" placeholder="Pega tu clave ORS (gratis)" autocomplete="off" spellcheck="false" />
-        <p class="adv__note">Sin clave, el alcance es una <strong>aproximación por radio</strong>. Con clave, se calcula la <strong>isócrona real</strong> siguiendo carreteras. La clave solo se guarda en esta sesión. Consíguela gratis en <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">openrouteservice.org</a>.</p>
+        <input class="adv__key" id="orsKey" type="password" placeholder="Otra clave ORS (opcional)" autocomplete="off" spellcheck="false" />
+        <p class="adv__note">La app ya incluye una clave para la <strong>isócrona real</strong>. Aquí puedes poner otra para sustituirla. Desactiva el interruptor «Isócrona real por carretera» para usar la <strong>aproximación por radio</strong>. Claves gratuitas en <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">openrouteservice.org</a>.</p>
       </div>
     </details>
 
@@ -320,13 +336,18 @@
 
       <div class="view" id="viewPlaces">
         <button class="surprise" id="surpriseBtn" type="button">✨ Sorpréndeme</button>
-        <div class="chips" id="chips"></div>
-        <div class="chips chips--adv" id="advChips">
-          <button class="chip chip--adv" data-adv="notable" type="button" aria-pressed="false">⭐ Destacados</button>
-          <button class="chip chip--adv" data-adv="accessible" type="button" aria-pressed="false">♿ Accesible</button>
-          <button class="chip chip--adv" data-adv="free" type="button" aria-pressed="false">🆓 Gratis</button>
-          <button class="chip chip--adv" data-adv="open" type="button" aria-pressed="false">🕒 Abierto ahora</button>
-        </div>
+        <details class="filters" id="filtersBox">
+          <summary class="filters__sum"><span>Filtros</span><span class="filters__count" id="filtersCount"></span></summary>
+          <div class="filters__body">
+            <div class="filters__cats" id="catList"></div>
+            <div class="filters__adv">
+              <label class="fck"><input type="checkbox" data-adv="notable"><span>⭐ Destacados</span></label>
+              <label class="fck"><input type="checkbox" data-adv="accessible"><span>♿ Accesible</span></label>
+              <label class="fck"><input type="checkbox" data-adv="free"><span>🆓 Gratis</span></label>
+              <label class="fck"><input type="checkbox" data-adv="open"><span>🕒 Abierto ahora</span></label>
+            </div>
+          </div>
+        </details>
         <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
         <div class="list" id="list"></div>
       </div>
@@ -404,6 +425,11 @@
   (function(){
     "use strict";
 
+    /* Clave OpenRouteService por defecto para la isócrona real por carretera.
+       AVISO: en un repositorio público esta clave queda visible en el código. */
+    var DEFAULT_ORS_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjE4ZDIyMTMyZGM4NzRiMjliNzIwNWQyMmJiYTA2MmM3IiwiaCI6Im11cm11cjY0In0=";
+    var useRealIso = true;
+
     /* ---------- Estado ---------- */
     var origin=null, mode="walk";
     var reach=null, poiLayer=null, pois=[], activeCats=new Set();
@@ -444,7 +470,7 @@
       modeWalk:byId("modeWalk"), modeCar:byId("modeCar"), timeRange:byId("timeRange"), timeVal:byId("timeVal"),
       reachBtn:byId("reachBtn"), orsKey:byId("orsKey"), adv:byId("adv"),
       results:byId("results"), tabPlaces:byId("tabPlaces"), tabTrip:byId("tabTrip"), tabPlacesN:byId("tabPlacesN"), tabTripN:byId("tabTripN"),
-      viewPlaces:byId("viewPlaces"), viewTrip:byId("viewTrip"), chips:byId("chips"), list:byId("list"),
+      viewPlaces:byId("viewPlaces"), viewTrip:byId("viewTrip"), list:byId("list"),
       tripCtl:byId("tripCtl"), tripEmpty:byId("tripEmpty"), tripList:byId("tripList"), tripFoot:byId("tripFoot"),
       tripTotals:byId("tripTotals"), genBtn:byId("genBtn"), mapsBtn:byId("mapsBtn"), mapsWarn:byId("mapsWarn")
     };
@@ -511,13 +537,14 @@
     function drawCircleReach(minutes){ var meters=SPEED_KMH[mode]*1000/60*minutes; _reachLayer=L.circle([origin.lat,origin.lng],Object.assign({},reachStyle,{radius:meters})).addTo(map); reach={ kind:"circle", lat:origin.lat, lng:origin.lng, radiusM:meters }; fitVisible(_reachLayer.getBounds()); }
     function firstRing(arr){ if(!arr||!arr.length) return []; if(typeof arr[0].lat==="number") return arr; return firstRing(arr[0]); }
     function fetchIsochrone(lat,lng,md,minutes,key){ var profile=md==="car"?"driving-car":"foot-walking"; return fetch("https://api.openrouteservice.org/v2/isochrones/"+profile,{ method:"POST", headers:{ "Authorization":key, "Content-Type":"application/json", "Accept":"application/geo+json" }, body:JSON.stringify({ locations:[[lng,lat]], range:[minutes*60], range_type:"time" }) }).then(function(r){ if(!r.ok) throw new Error("ORS "+r.status); return r.json(); }); }
+    function getOrsKey(){ var k=el.orsKey.value.trim(); return k||DEFAULT_ORS_KEY; }
     function buildReach(){ var minutes=+el.timeRange.value; clearReach();
       if(searchMode==="corridor"){ if(!destination) return Promise.reject({ noDest:true }); var W=SPEED_KMH[mode]*1000/60*minutes; var ring=corridorPolygon(origin,destination,W); _reachLayer=L.polygon(ring,reachStyle).addTo(map); reach={ kind:"poly", ring:ring }; fitVisible(_reachLayer.getBounds()); return Promise.resolve("corredor a destino"); }
-      var key=el.orsKey.value.trim();
-      if(key){ showNotice("Calculando isócrona real…","info");
+      var key=getOrsKey();
+      if(useRealIso && key){ showNotice("Calculando isócrona real…","info");
         return fetchIsochrone(origin.lat,origin.lng,mode,minutes,key).then(function(geo){ _reachLayer=L.geoJSON(geo,{ style:reachStyle }).addTo(map); var ring=firstRing(_reachLayer.getLayers()[0].getLatLngs()).map(function(p){ return [p.lat,p.lng]; }); reach={ kind:"poly", ring:ring }; fitVisible(_reachLayer.getBounds()); return "isócrona real"; })
         .catch(function(){ drawCircleReach(minutes); return "aproximación por radio (ORS no disponible)"; }); }
-      drawCircleReach(minutes); return Promise.resolve("aproximación por radio");
+      drawCircleReach(minutes); return Promise.resolve((useRealIso&&!key)?"aproximación por radio (falta clave)":"aproximación por radio");
     }
 
     /* ---------- Overpass ---------- */
@@ -544,12 +571,13 @@
     function gmapsSingle(dst){ var tm=mode==="car"?"driving":"walking"; return "https://www.google.com/maps/dir/?api=1&travelmode="+tm+"&origin="+encodeURIComponent(origin.lat+","+origin.lng)+"&destination="+encodeURIComponent(dst.lat+","+dst.lng); }
 
     /* ---------- Render: resultados / sitios ---------- */
-    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.chips.innerHTML=""; el.list.innerHTML=""; activeTab="places"; }
+    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; byId("catList").innerHTML=""; el.list.innerHTML=""; activeTab="places"; }
     function updateCounts(){ el.tabPlacesN.textContent=pois.length; el.tabTripN.textContent=trip.length; }
     function inTrip(id){ for(var i=0;i<trip.length;i++) if(trip[i].id===id) return true; return false; }
 
     function renderMarkers(){ poiLayer.clearLayers(); pois.forEach(function(p){ if(!passesFilters(p)) return; var c=CATS[p.cat]; var mk=L.circleMarker([p.lat,p.lng],{ radius:8, color:"#fff", weight:2, fillColor:c.color, fillOpacity:1 }); mk.on("click",function(){ openPoiCard(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
-    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); el.chips.innerHTML=""; Object.keys(CATS).forEach(function(k){ if(!counts[k]) return; var c=CATS[k]; var b=document.createElement("button"); b.type="button"; b.className="chip"+(activeCats.has(k)?" is-on":""); b.style.setProperty("--c",c.color); b.setAttribute("aria-pressed",String(activeCats.has(k))); b.innerHTML='<span class="chip__dot"></span>'+c.label+' <b>'+counts[k]+'</b>'; b.addEventListener("click",function(){ if(activeCats.has(k)) activeCats.delete(k); else activeCats.add(k); renderChips(); renderMarkers(); renderList(); }); el.chips.appendChild(b); }); }
+    function updateFiltersCount(){ var n=0; ["notable","accessible","free","open"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
+    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); box.innerHTML=""; Object.keys(CATS).forEach(function(k){ if(!counts[k]) return; var c=CATS[k]; var lab=document.createElement("label"); lab.className="fck"; lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'"></span><span>'+c.label+'</span><b>'+counts[k]+'</b>'; lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); }); box.appendChild(lab); }); updateFiltersCount(); }
     function renderList(){ var shown=sortShown(pois.filter(passesFilters)); el.list.innerHTML="";
       shown.forEach(function(p){ var c=CATS[p.cat], wiki=wikiUrl(p.tags), notable=!!(p.tags&&(p.tags.wikipedia||p.tags.wikidata));
         var row=document.createElement("div"); row.className="poi";
@@ -587,7 +615,6 @@
     function refreshDestUI(){ renderCorridorDest(); renderDestCtl(); syncSheetHeight(); }
     function renderDestCtl(){ renderDestInto(byId("tripCtl"),"td"); }
 
-    function onDestBtn(){ if(settingDestination){ settingDestination=false; } else { settingDestination=true; } renderDestCtl(); syncSheetHeight(); }
     function destIconObj(){ return L.divIcon({ className:"destmark", html:"<span>🏁</span>", iconSize:[30,30], iconAnchor:[15,15] }); }
     function setDestination(lat,lng){ destination={ lat:lat, lng:lng }; settingDestination=false; if(destMarker) map.removeLayer(destMarker); destMarker=L.marker([lat,lng],{ icon:destIconObj() }).addTo(map); markRouteStale(); refreshDestUI(); renderTrip(); centerOn(lat,lng); }
     function removeDestination(){ destination=null; if(destMarker){ map.removeLayer(destMarker); destMarker=null; } markRouteStale(); refreshDestUI(); renderTrip(); }
@@ -887,7 +914,7 @@
     el.tabPlaces.addEventListener("click",function(){ setTab("places"); });
     el.tabTrip.addEventListener("click",function(){ setTab("trip"); });
     byId("surpriseBtn").addEventListener("click",surprise);
-    Array.prototype.forEach.call(document.querySelectorAll("#advChips .chip--adv"),function(b){ b.addEventListener("click",function(){ var k=b.getAttribute("data-adv"); advFilters[k]=!advFilters[k]; b.classList.toggle("is-on",advFilters[k]); b.setAttribute("aria-pressed",String(advFilters[k])); renderMarkers(); renderList(); }); });
+    Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.addEventListener("change",function(){ advFilters[cb.getAttribute("data-adv")]=cb.checked; renderMarkers(); renderList(); updateFiltersCount(); }); });
     byId("sortSel").addEventListener("change",function(){ sortMode=byId("sortSel").value; renderList(); });
     el.genBtn.addEventListener("click",generateRoute);
     el.mapsBtn.addEventListener("click",function(){ if(lastRoute) window.open(gmapsRoute(lastRoute),"_blank","noopener"); });
@@ -905,6 +932,8 @@
     byId("placeSearch").addEventListener("keydown",function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); if(geoTimer) clearTimeout(geoTimer); renderSearch(); } });
     byId("searchClear").addEventListener("click",function(){ byId("placeSearch").value=""; byId("searchClear").hidden=true; byId("searchResults").hidden=true; byId("searchResults").innerHTML=""; });
     el.orsKey.addEventListener("change",function(){ saveKey(el.orsKey.value.trim()); });
+    byId("isoToggle").addEventListener("change",function(){ useRealIso=byId("isoToggle").checked; });
+    document.addEventListener("click",function(e){ var t=e.target; if(!t||!t.closest) return; var a=t.closest('a[target="_blank"]'); if(a){ var href=a.getAttribute("href")||""; if(/^https?:/i.test(href)){ e.preventDefault(); window.open(a.href,"_blank","noopener"); } } });
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
     byId("themeFab").addEventListener("click",toggleTheme);
     byId("panelToggle").addEventListener("click",togglePanel);
