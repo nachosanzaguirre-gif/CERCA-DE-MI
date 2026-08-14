@@ -46,6 +46,9 @@
   .sheet > *{ flex:0 0 auto; }
   .sheet__handle{ width:42px; height:5px; border-radius:999px; background:var(--line); margin:4px auto 12px; }
   .search-wrap{ position:relative; margin-bottom:14px; }
+  .search-wrap--sm{ margin-bottom:8px; }
+  .search--sm{ padding:9px 11px; } .search--sm .search__input{ font-size:14px; }
+  .trip-dest--mark{ margin-top:0; }
   .search{ display:flex; align-items:center; gap:9px; padding:11px 13px; background:var(--mist); border:1px solid var(--line); border-radius:13px; }
   .search svg{ width:18px; height:18px; color:var(--ink-soft); flex:0 0 18px; }
   .search__input{ flex:1; min-width:0; border:none; background:transparent; font-family:var(--font-body); font-size:15px; color:var(--ink); outline:none; }
@@ -223,6 +226,32 @@
   .leaflet-control-layers-expanded label{ margin:4px 0!important; display:flex; align-items:center; gap:6px; }
   .leaflet-bar{ border-radius:12px!important; overflow:hidden; box-shadow:var(--shadow)!important; }
   .cta:focus-visible,.recenter:focus-visible,.ico-btn:focus-visible,.seg__opt:focus-visible,.chip:focus-visible,.tab:focus-visible,.btn2:focus-visible{ outline:3px solid var(--sun-2); outline-offset:2px; }
+
+  .panel-toggle{ display:none; }
+  .sheet__handle{ cursor:pointer; }
+  @media (max-width:899px){
+    body.panel-collapsed .sheet{ transform:translateY(calc(100% - 32px)); }
+    body.panel-collapsed .recenter{ bottom:48px; }
+  }
+
+  /* ---------- Escritorio: panel lateral en vez de hoja inferior ---------- */
+  @media (min-width:900px){
+    #map{ left:400px; }
+    .sheet{ top:0; bottom:0; left:0; right:auto; width:400px; max-height:none; border-radius:0; border-right:1px solid var(--line); box-shadow:4px 0 24px -8px rgba(23,22,53,.18); padding:18px 20px 18px; }
+    .sheet__handle{ display:none; }
+    .topbar{ left:calc(50% + 200px); }
+    .recenter{ top:auto; bottom:26px; right:26px; }
+    .modal{ align-items:center; }
+    .modal__card{ border-radius:var(--r-lg); max-height:82vh; }
+    .poicard{ border-radius:var(--r-lg); }
+    .panel-toggle{ display:grid; position:fixed; z-index:600; top:16px; left:412px; width:38px; height:38px; place-items:center; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); cursor:pointer; transition:left .28s ease; }
+    .panel-toggle svg{ width:20px; height:20px; transition:transform .2s ease; }
+    body.panel-collapsed #map{ left:0; }
+    body.panel-collapsed .sheet{ transform:translateX(-100%); }
+    body.panel-collapsed .topbar{ left:50%; }
+    body.panel-collapsed .panel-toggle{ left:12px; }
+    body.panel-collapsed .panel-toggle svg{ transform:rotate(180deg); }
+  }
 </style>
 </head>
 <body>
@@ -236,6 +265,7 @@
   <button class="saved-fab" id="savedFab" type="button" aria-label="Rutas guardadas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg></button>
   <button class="theme-fab" id="themeFab" type="button" aria-label="Modo oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
 
+  <button class="panel-toggle" id="panelToggle" type="button" aria-label="Ocultar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
   <button class="recenter" id="recenter" type="button" aria-label="Centrar el mapa en mi punto de partida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 
   <section class="sheet" id="sheet" aria-label="Cerca">
@@ -422,6 +452,7 @@
 
     /* ---------- Utilidades ---------- */
     function syncSheetHeight(){ document.documentElement.style.setProperty("--sheet-h", el.sheet.offsetHeight+"px"); }
+    function togglePanel(){ document.body.classList.toggle("panel-collapsed"); var c=document.body.classList.contains("panel-collapsed"); var pt=byId("panelToggle"); if(pt) pt.setAttribute("aria-label", c?"Mostrar panel":"Ocultar panel"); setTimeout(function(){ try{ map.invalidateSize(); }catch(e){} syncSheetHeight(); }, 300); }
     function showNotice(t,k){ el.notice.textContent=t; el.notice.className="notice is-on notice--"+(k||"info"); syncSheetHeight(); }
     function clearNotice(){ el.notice.className="notice"; syncSheetHeight(); }
     function fmt(n){ return n.toFixed(5); }
@@ -430,6 +461,9 @@
     function haversine(la1,lo1,la2,lo2){ var R=6371000,toR=Math.PI/180; var dLa=(la2-la1)*toR,dLo=(lo2-lo1)*toR; var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*toR)*Math.cos(la2*toR)*Math.sin(dLo/2)*Math.sin(dLo/2); return 2*R*Math.asin(Math.sqrt(a)); }
     function d(a,b){ return haversine(a.lat,a.lng,b.lat,b.lng); }
     function fmtDist(m){ return m>=1000?(m/1000).toFixed(1).replace(".",",")+" km":Math.round(m)+" m"; }
+    function mobileSheetOffset(){ if(window.innerWidth>=900) return 0; if(document.body.classList.contains("panel-collapsed")) return 78; var h=el.sheet.offsetHeight||0; return Math.min(h, Math.round(window.innerHeight*0.45)); }
+    function centerOn(lat,lng,zoom){ zoom=(zoom==null)?Math.max(map.getZoom(),15):zoom; var off=mobileSheetOffset(); if(off>0){ var pt=map.project([lat,lng],zoom); pt.y+=off/2; var c=map.unproject(pt,zoom); map.flyTo(c,zoom,{duration:.7}); } else { map.flyTo([lat,lng],zoom,{duration:.7}); } }
+    function fitVisible(b){ var off=mobileSheetOffset(); try{ map.fitBounds(b,{ paddingTopLeft:[30,60], paddingBottomRight:[30,30+off] }); }catch(e){ try{ map.fitBounds(b,{ padding:[40,40] }); }catch(e2){} } }
     function inPoly(lat,lng,ring){ var inside=false; for(var i=0,j=ring.length-1;i<ring.length;j=i++){ var yi=ring[i][0],xi=ring[i][1],yj=ring[j][0],xj=ring[j][1]; var hit=((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi); if(hit) inside=!inside; } return inside; }
     function within(lat,lng){ if(!reach) return true; if(reach.kind==="circle") return haversine(reach.lat,reach.lng,lat,lng)<=reach.radiusM; return inPoly(lat,lng,reach.ring); }
     function corridorPolygon(O,D,halfW){ var latMid=(O.lat+D.lat)/2, mLat=111320, mLng=111320*Math.cos(latMid*Math.PI/180); var Dx=(D.lng-O.lng)*mLng, Dy=(D.lat-O.lat)*mLat; var L=Math.sqrt(Dx*Dx+Dy*Dy); if(L<1e-6) return []; var ux=Dx/L, uy=Dy/L, px=-uy, py=ux; var pts=[[px*halfW,py*halfW],[Dx+px*halfW,Dy+py*halfW],[Dx-px*halfW,Dy-py*halfW],[-px*halfW,-py*halfW]]; return pts.map(function(m){ return [ O.lat + m[1]/mLat, O.lng + m[0]/mLng ]; }); }
@@ -466,7 +500,7 @@
       if(!("geolocation" in navigator)){ showNotice("Este dispositivo no ofrece ubicación. Toca el mapa para marcar tu punto de partida.","warn"); return; }
       clearNotice(); el.locateBtn.classList.add("busy");
       navigator.geolocation.getCurrentPosition(
-        function(pos){ var c=pos.coords; setOrigin(c.latitude,c.longitude,"gps",c.accuracy); map.flyTo([c.latitude,c.longitude],14,{duration:.9}); el.locateBtn.classList.remove("busy"); },
+        function(pos){ var c=pos.coords; setOrigin(c.latitude,c.longitude,"gps",c.accuracy); centerOn(c.latitude,c.longitude,14); el.locateBtn.classList.remove("busy"); },
         function(err){ el.locateBtn.classList.remove("busy"); var m="No se ha podido acceder al GPS aquí. Toca el mapa para marcar tu punto de partida."; if(err&&err.code===1) m="Permiso de ubicación denegado. Toca el mapa para marcar, o activa el permiso en tu navegador."; showNotice(m,"warn"); },
         { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
     }
@@ -474,14 +508,14 @@
     /* ---------- Área ---------- */
     var _reachLayer=null;
     function clearReach(){ if(_reachLayer){ map.removeLayer(_reachLayer); _reachLayer=null; } reach=null; }
-    function drawCircleReach(minutes){ var meters=SPEED_KMH[mode]*1000/60*minutes; _reachLayer=L.circle([origin.lat,origin.lng],Object.assign({},reachStyle,{radius:meters})).addTo(map); reach={ kind:"circle", lat:origin.lat, lng:origin.lng, radiusM:meters }; map.fitBounds(_reachLayer.getBounds(),{ padding:[40,40] }); }
+    function drawCircleReach(minutes){ var meters=SPEED_KMH[mode]*1000/60*minutes; _reachLayer=L.circle([origin.lat,origin.lng],Object.assign({},reachStyle,{radius:meters})).addTo(map); reach={ kind:"circle", lat:origin.lat, lng:origin.lng, radiusM:meters }; fitVisible(_reachLayer.getBounds()); }
     function firstRing(arr){ if(!arr||!arr.length) return []; if(typeof arr[0].lat==="number") return arr; return firstRing(arr[0]); }
     function fetchIsochrone(lat,lng,md,minutes,key){ var profile=md==="car"?"driving-car":"foot-walking"; return fetch("https://api.openrouteservice.org/v2/isochrones/"+profile,{ method:"POST", headers:{ "Authorization":key, "Content-Type":"application/json", "Accept":"application/geo+json" }, body:JSON.stringify({ locations:[[lng,lat]], range:[minutes*60], range_type:"time" }) }).then(function(r){ if(!r.ok) throw new Error("ORS "+r.status); return r.json(); }); }
     function buildReach(){ var minutes=+el.timeRange.value; clearReach();
-      if(searchMode==="corridor"){ if(!destination) return Promise.reject({ noDest:true }); var W=SPEED_KMH[mode]*1000/60*minutes; var ring=corridorPolygon(origin,destination,W); _reachLayer=L.polygon(ring,reachStyle).addTo(map); reach={ kind:"poly", ring:ring }; map.fitBounds(_reachLayer.getBounds(),{ padding:[40,40] }); return Promise.resolve("corredor a destino"); }
+      if(searchMode==="corridor"){ if(!destination) return Promise.reject({ noDest:true }); var W=SPEED_KMH[mode]*1000/60*minutes; var ring=corridorPolygon(origin,destination,W); _reachLayer=L.polygon(ring,reachStyle).addTo(map); reach={ kind:"poly", ring:ring }; fitVisible(_reachLayer.getBounds()); return Promise.resolve("corredor a destino"); }
       var key=el.orsKey.value.trim();
       if(key){ showNotice("Calculando isócrona real…","info");
-        return fetchIsochrone(origin.lat,origin.lng,mode,minutes,key).then(function(geo){ _reachLayer=L.geoJSON(geo,{ style:reachStyle }).addTo(map); var ring=firstRing(_reachLayer.getLayers()[0].getLatLngs()).map(function(p){ return [p.lat,p.lng]; }); reach={ kind:"poly", ring:ring }; map.fitBounds(_reachLayer.getBounds(),{ padding:[40,40] }); return "isócrona real"; })
+        return fetchIsochrone(origin.lat,origin.lng,mode,minutes,key).then(function(geo){ _reachLayer=L.geoJSON(geo,{ style:reachStyle }).addTo(map); var ring=firstRing(_reachLayer.getLayers()[0].getLatLngs()).map(function(p){ return [p.lat,p.lng]; }); reach={ kind:"poly", ring:ring }; fitVisible(_reachLayer.getBounds()); return "isócrona real"; })
         .catch(function(){ drawCircleReach(minutes); return "aproximación por radio (ORS no disponible)"; }); }
       drawCircleReach(minutes); return Promise.resolve("aproximación por radio");
     }
@@ -539,18 +573,24 @@
 
     function removeFromTrip(id){ var p=null; for(var k=0;k<trip.length;k++) if(trip[k].id===id){ p=trip[k]; trip.splice(k,1); break; } markRouteStale(); updateCounts(); if(p&&p._addBtn){ p._addBtn.className="poi__add"; p._addBtn.textContent="+"; } renderTrip(); }
 
-    function renderDestCtl(){ var h="";
-      if(destination){ h='<div class="dest-row"><span class="dest-row__ico">🏁</span><span class="dest-row__txt"><b>Destino</b>'+fmt(destination.lat)+", "+fmt(destination.lng)+'</span><button class="dest-row__rm" id="destRm" aria-label="Quitar destino">×</button></div>'; }
-      else if(settingDestination){ h='<button class="trip-dest is-picking" id="destBtn" type="button">Toca el mapa para fijar el destino · Cancelar</button><div class="trip-hint">Modo destino activo</div>'; }
-      else { h='<button class="trip-dest" id="destBtn" type="button">＋ Añadir destino (opcional)</button>'; }
-      el.tripCtl.innerHTML=h;
-      var db=byId("destBtn"); if(db) db.addEventListener("click",onDestBtn);
-      var dr=byId("destRm"); if(dr) dr.addEventListener("click",function(){ removeDestination(); }); }
+    function destSetterMarkup(prefix){ return '<div class="search-wrap search-wrap--sm"><div class="search search--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input class="search__input" id="'+prefix+'Search" type="text" placeholder="Escribe el destino…" autocomplete="off" enterkeyhint="search"/><button class="search__clear" id="'+prefix+'Clear" type="button" hidden aria-label="Limpiar">×</button></div><div class="search-results" id="'+prefix+'Results" hidden></div></div><button class="trip-dest trip-dest--mark" id="'+prefix+'Mark" type="button">📍 Marcar en el mapa</button>'; }
+    function wireDestSearch(prefix){ var inp=byId(prefix+"Search"), box=byId(prefix+"Results"), clr=byId(prefix+"Clear"), timer=null; if(!inp) return;
+      function run(){ var q=(inp.value||"").trim(); if(q.length<3){ box.hidden=true; box.innerHTML=""; return; } box.hidden=false; box.innerHTML='<div class="sr-empty">Buscando…</div>';
+        geocode(q).then(function(arr){ if(!arr||!arr.length){ box.innerHTML='<div class="sr-empty">Sin resultados.</div>'; return; } box.innerHTML=""; arr.forEach(function(r){ var lat=parseFloat(r.lat),lng=parseFloat(r.lon); if(isNaN(lat)||isNaN(lng)) return; var it=document.createElement("button"); it.type="button"; it.className="sr-item"; it.innerHTML='<span class="sr-item__pin" aria-hidden="true">🏁</span><span class="sr-item__txt">'+esc(r.display_name)+'</span>'; it.addEventListener("click",function(){ setDestination(lat,lng); }); box.appendChild(it); }); })["catch"](function(){ box.innerHTML='<div class="sr-empty">No se pudo buscar ahora.</div>'; }); }
+      inp.addEventListener("input",function(){ clr.hidden=!inp.value; if(timer) clearTimeout(timer); timer=setTimeout(run,700); });
+      inp.addEventListener("keydown",function(ev){ if(ev.key==="Enter"){ ev.preventDefault(); if(timer) clearTimeout(timer); run(); } });
+      clr.addEventListener("click",function(){ inp.value=""; clr.hidden=true; box.hidden=true; box.innerHTML=""; }); }
+    function renderDestInto(box,prefix){
+      if(destination){ box.innerHTML='<div class="dest-row"><span class="dest-row__ico">🏁</span><span class="dest-row__txt"><b>Destino</b>'+fmt(destination.lat)+", "+fmt(destination.lng)+'</span><button class="dest-row__rm" id="'+prefix+'Rm" type="button" aria-label="Quitar destino">×</button></div>'; byId(prefix+"Rm").addEventListener("click",removeDestination); }
+      else if(settingDestination){ box.innerHTML='<button class="trip-dest is-picking" id="'+prefix+'Cancel" type="button">Toca el mapa para fijar el destino · Cancelar</button>'; byId(prefix+"Cancel").addEventListener("click",function(){ settingDestination=false; refreshDestUI(); }); }
+      else { box.innerHTML=destSetterMarkup(prefix); wireDestSearch(prefix); byId(prefix+"Mark").addEventListener("click",function(){ settingDestination=true; refreshDestUI(); }); } }
+    function refreshDestUI(){ renderCorridorDest(); renderDestCtl(); syncSheetHeight(); }
+    function renderDestCtl(){ renderDestInto(byId("tripCtl"),"td"); }
 
     function onDestBtn(){ if(settingDestination){ settingDestination=false; } else { settingDestination=true; } renderDestCtl(); syncSheetHeight(); }
     function destIconObj(){ return L.divIcon({ className:"destmark", html:"<span>🏁</span>", iconSize:[30,30], iconAnchor:[15,15] }); }
-    function setDestination(lat,lng){ destination={ lat:lat, lng:lng }; settingDestination=false; if(destMarker) map.removeLayer(destMarker); destMarker=L.marker([lat,lng],{ icon:destIconObj() }).addTo(map); markRouteStale(); renderDestCtl(); renderCorridorDest(); renderTrip(); }
-    function removeDestination(){ destination=null; if(destMarker){ map.removeLayer(destMarker); destMarker=null; } markRouteStale(); renderDestCtl(); renderCorridorDest(); renderTrip(); }
+    function setDestination(lat,lng){ destination={ lat:lat, lng:lng }; settingDestination=false; if(destMarker) map.removeLayer(destMarker); destMarker=L.marker([lat,lng],{ icon:destIconObj() }).addTo(map); markRouteStale(); refreshDestUI(); renderTrip(); centerOn(lat,lng); }
+    function removeDestination(){ destination=null; if(destMarker){ map.removeLayer(destMarker); destMarker=null; } markRouteStale(); refreshDestUI(); renderTrip(); }
 
     function renderTrip(){ renderDestCtl();
       var seq=trip;
@@ -589,7 +629,7 @@
       route.forEach(function(n){ if(n.type==="origin"||n.type==="dest") return; num++; var p=n, c=CATS[p.cat], idx=num;
         var mk=L.marker([p.lat,p.lng],{ icon:L.divIcon({ className:"nummark", html:'<span style="background:'+c.color+'">'+idx+'</span>', iconSize:[28,28], iconAnchor:[14,14] }) });
         mk.bindPopup('<div class="pop"><strong>'+idx+". "+esc(p.name)+'</strong><br>'+c.label+" · ~"+c.visit+" min</div>"); routeLayer.addLayer(mk); });
-      map.fitBounds(L.latLngBounds(coords),{ padding:[50,50] });
+      fitVisible(L.latLngBounds(coords));
     }
     function rebuildRouteFromTrip(){ var S={ type:"origin", lat:origin.lat, lng:origin.lng }, E=destination?{ type:"dest", lat:destination.lat, lng:destination.lng }:null; lastRoute=[S].concat(trip).concat(E?[E]:[]); drawRoute(lastRoute); }
     function moveTrip(i,dir){ var j=i+dir; if(j<0||j>=trip.length) return; var tmp=trip[i]; trip[i]=trip[j]; trip[j]=tmp; if(routeReady) rebuildRouteFromTrip(); renderTrip(); }
@@ -634,7 +674,7 @@
       if(o.ordered && trip.length){ routeReady=true; rebuildRouteFromTrip(); }
       el.results.hidden=false; updateCounts(); setTab("trip");
       var pts=[[origin.lat,origin.lng]].concat(trip.map(function(p){ return [p.lat,p.lng]; })); if(destination) pts.push([destination.lat,destination.lng]);
-      if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{ padding:[50,50] }); else map.flyTo([origin.lat,origin.lng],14,{duration:.6});
+      if(pts.length>1) fitVisible(L.latLngBounds(pts)); else centerOn(origin.lat,origin.lng,14);
       byId("weather").hidden=true; updateWeather();
       showNotice("Ruta cargada: "+o.name,"ok");
     }
@@ -668,7 +708,7 @@
         arr.forEach(function(r){ var lat=parseFloat(r.lat), lng=parseFloat(r.lon); if(isNaN(lat)||isNaN(lng)) return; var it=document.createElement("button"); it.type="button"; it.className="sr-item"; it.innerHTML='<span class="sr-item__pin" aria-hidden="true">📍</span><span class="sr-item__txt">'+esc(r.display_name)+'</span>'; it.addEventListener("click",function(){ selectGeocode(lat,lng); }); box.appendChild(it); });
       }).catch(function(){ box.innerHTML='<div class="sr-empty">No se pudo buscar ahora (servidor o red). Prueba de nuevo.</div>'; }); }
     function selectGeocode(lat,lng){ var box=byId("searchResults"); box.hidden=true; box.innerHTML=""; byId("placeSearch").value=""; byId("searchClear").hidden=true;
-      if(settingDestination){ setDestination(lat,lng); } else { setOrigin(lat,lng,"search"); } map.flyTo([lat,lng],14,{ duration:.9 }); }
+      if(settingDestination){ setDestination(lat,lng); } else { setOrigin(lat,lng,"search"); } centerOn(lat,lng,14); }
 
     /* ---------- Persistencia de la clave ORS ---------- */
     function saveKey(v){ var k="cfg:orskey"; if(artifactStore){ try{ window.storage.set(k,v,false).catch(function(){}); }catch(e){} } else if(useLocal){ try{ window.localStorage.setItem(k,v); }catch(e){} } }
@@ -831,11 +871,7 @@
     /* ---------- Modo / tiempo ---------- */
     function setModeUI(){ var walk=mode==="walk"; el.modeWalk.classList.toggle("is-on",walk); el.modeWalk.setAttribute("aria-pressed",String(walk)); el.modeCar.classList.toggle("is-on",!walk); el.modeCar.setAttribute("aria-pressed",String(!walk)); }
     function setMode(m){ mode=m; setModeUI(); resetResults(); clearReach(); }
-    function renderCorridorDest(){ var box=byId("destCtl"); if(searchMode!=="corridor"){ box.hidden=true; box.innerHTML=""; return; } box.hidden=false; var h;
-      if(destination){ h='<div class="dest-row"><span class="dest-row__ico">🏁</span><span class="dest-row__txt"><b>Destino</b>'+fmt(destination.lat)+", "+fmt(destination.lng)+'</span><button class="dest-row__rm" id="cdRm" aria-label="Quitar destino">×</button></div>'; }
-      else if(settingDestination){ h='<button class="trip-dest is-picking" id="cdBtn" type="button">Toca el mapa para fijar el destino · Cancelar</button>'; }
-      else { h='<button class="trip-dest" id="cdBtn" type="button">📍 Fijar destino (toca el mapa)</button>'; }
-      box.innerHTML=h; var b=byId("cdBtn"); if(b) b.addEventListener("click",function(){ settingDestination=!settingDestination; renderCorridorDest(); renderDestCtl(); syncSheetHeight(); }); var r=byId("cdRm"); if(r) r.addEventListener("click",function(){ removeDestination(); }); syncSheetHeight(); }
+    function renderCorridorDest(){ var box=byId("destCtl"); if(searchMode!=="corridor"){ box.hidden=true; box.innerHTML=""; return; } box.hidden=false; renderDestInto(box,"cd"); }
     function setSearchMode(m){ searchMode=m; byId("modeNear").classList.toggle("is-on",m==="near"); byId("modeNear").setAttribute("aria-pressed",String(m==="near")); byId("modeCorr").classList.toggle("is-on",m==="corridor"); byId("modeCorr").setAttribute("aria-pressed",String(m==="corridor")); byId("timeLabel").textContent = m==="corridor" ? "Desvío máx." : "Tiempo máximo"; renderCorridorDest(); resetResults(); clearReach(); syncSheetHeight(); }
 
     /* ---------- Eventos ---------- */
@@ -845,7 +881,7 @@
     byId("modeCorr").addEventListener("click",function(){ setSearchMode("corridor"); });
     el.timeRange.addEventListener("input",function(){ el.timeVal.innerHTML=el.timeRange.value+' <small>min</small>'; });
     map.on("click",function(e){ if(settingDestination){ setDestination(e.latlng.lat,e.latlng.lng); return; } setOrigin(e.latlng.lat,e.latlng.lng,"marked"); clearNotice(); });
-    el.recenter.addEventListener("click",function(){ if(origin) map.flyTo([origin.lat,origin.lng],Math.max(map.getZoom(),14),{duration:.6}); });
+    el.recenter.addEventListener("click",function(){ if(origin) centerOn(origin.lat,origin.lng,Math.max(map.getZoom(),14)); });
     el.locateBtn.addEventListener("click",locate);
     el.reachBtn.addEventListener("click",searchPlaces);
     el.tabPlaces.addEventListener("click",function(){ setTab("places"); });
@@ -871,11 +907,13 @@
     el.orsKey.addEventListener("change",function(){ saveKey(el.orsKey.value.trim()); });
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
     byId("themeFab").addEventListener("click",toggleTheme);
+    byId("panelToggle").addEventListener("click",togglePanel);
+    (function(){ var hnd=el.sheet.querySelector(".sheet__handle"); if(hnd) hnd.addEventListener("click",function(){ if(window.innerWidth<900) togglePanel(); }); })();
     loadTheme().then(function(v){ setTheme(v==="dark"?"dark":"light"); });
     byId("pcClose").addEventListener("click",function(){ byId("poiModal").hidden=true; });
     byId("pcBackdrop").addEventListener("click",function(){ byId("poiModal").hidden=true; });
     byId("pcAdd").addEventListener("click",function(){ if(currentCardPoi){ toggleTrip(currentCardPoi); updateCardAddBtn(); } });
-    byId("pcMap").addEventListener("click",function(){ if(!currentCardPoi) return; byId("poiModal").hidden=true; var p=currentCardPoi; if(p._marker && poiLayer.zoomToShowLayer){ poiLayer.zoomToShowLayer(p._marker,function(){}); } else { map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),15),{duration:.5}); } });
+    byId("pcMap").addEventListener("click",function(){ if(!currentCardPoi) return; byId("poiModal").hidden=true; var p=currentCardPoi; if(p._marker && poiLayer.zoomToShowLayer){ poiLayer.zoomToShowLayer(p._marker,function(){}); } else { centerOn(p.lat,p.lng,Math.max(map.getZoom(),15)); } });
     byId("fitsRange").addEventListener("input",function(){ fitsBudgetMin=+byId("fitsRange").value; updateFits(); });
     byId("pcReadMore").addEventListener("click",onReadMore);
 
