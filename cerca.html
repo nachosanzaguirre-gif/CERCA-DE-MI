@@ -233,6 +233,20 @@
   .nummark span{ display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:#fff; font-family:var(--font-display); font-weight:800; font-size:14px; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); }
   .leaflet-div-icon.destmark{ background:transparent; border:none; }
   .destmark span{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:#171635; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); font-size:15px; }
+  /* Marcadores de sitios: antes sin CSS (invisibles); ahora grandes y palpitantes */
+  .leaflet-div-icon.poi-mark{ background:transparent; border:none; width:30px; height:30px; }
+  .poi-mark__dot{ position:absolute; left:50%; top:50%; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  .poi-mark__pulse{ position:absolute; left:50%; top:50%; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; opacity:.5; animation:poimarkpulse 1.9s ease-out infinite; }
+  @keyframes poimarkpulse{ 0%{ transform:scale(1); opacity:.5; } 70%{ opacity:0; } 100%{ transform:scale(2.7); opacity:0; } }
+  .leaflet-div-icon.poi-mark.is-sel .poi-mark__dot{ width:24px; height:24px; margin:-12px 0 0 -12px; box-shadow:0 0 0 3px rgba(255,77,141,.95), 0 3px 12px rgba(0,0,0,.45); }
+  .leaflet-div-icon.poi-mark.is-sel .poi-mark__pulse{ animation-duration:1.05s; opacity:.75; }
+  @media (prefers-reduced-motion:reduce){ .poi-mark__pulse{ animation:none; opacity:.28; transform:scale(1.8); } }
+  /* Fila de lista resaltada al seleccionar (sincronizada con el mapa) */
+  .poi.is-sel{ background:#fff4f8; box-shadow:inset 3px 0 0 #FF4D8D; border-radius:8px; }
+  .dark .poi.is-sel{ background:rgba(255,77,141,.12); }
+  /* Botón de reseteo */
+  .reset-fab{ position:fixed; z-index:500; top:max(14px,env(safe-area-inset-top)); right:124px; width:46px; height:46px; display:grid; place-items:center; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; } .reset-fab svg{ width:22px; height:22px; }
+  .fck--empty{ opacity:.55; }
 
   .leaflet-control-zoom a{ color:#171635!important; border-color:#e5e7eb!important; font-weight:700; }
   .leaflet-control-layers{ border-radius:12px!important; box-shadow:var(--shadow)!important; border:1px solid #e5e7eb!important; }
@@ -279,6 +293,7 @@
 
   <button class="saved-fab" id="savedFab" type="button" aria-label="Rutas guardadas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg></button>
   <button class="theme-fab" id="themeFab" type="button" aria-label="Modo oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  <button class="reset-fab" id="resetFab" type="button" aria-label="Reiniciar la aplicación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
 
   <button class="panel-toggle" id="panelToggle" type="button" aria-label="Ocultar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
   <button class="recenter" id="recenter" type="button" aria-label="Centrar el mapa en mi punto de partida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
@@ -315,6 +330,19 @@
       <input class="range" id="timeRange" type="range" min="5" max="90" step="5" value="20" aria-label="Tiempo máximo de desplazamiento en minutos" />
     </div>
 
+    <details class="filters" id="filtersBox">
+      <summary class="filters__sum"><span>Filtros (aplícalos antes de buscar)</span><span class="filters__count" id="filtersCount"></span></summary>
+      <div class="filters__body">
+        <div class="filters__cats" id="catList"></div>
+        <div class="filters__adv">
+          <label class="fck"><input type="checkbox" data-adv="notable"><span>⭐ Destacados</span></label>
+          <label class="fck"><input type="checkbox" data-adv="accessible"><span>♿ Accesible</span></label>
+          <label class="fck"><input type="checkbox" data-adv="free"><span>🆓 Gratis</span></label>
+          <label class="fck"><input type="checkbox" data-adv="open"><span>🕒 Abierto ahora</span></label>
+        </div>
+      </div>
+    </details>
+
     <button class="cta" id="reachBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Buscar sitios</button>
     <label class="isoline"><input type="checkbox" id="isoToggle" checked><span>🛣️ Isócrona real por carretera</span></label>
 
@@ -336,18 +364,6 @@
 
       <div class="view" id="viewPlaces">
         <button class="surprise" id="surpriseBtn" type="button">✨ Sorpréndeme</button>
-        <details class="filters" id="filtersBox">
-          <summary class="filters__sum"><span>Filtros</span><span class="filters__count" id="filtersCount"></span></summary>
-          <div class="filters__body">
-            <div class="filters__cats" id="catList"></div>
-            <div class="filters__adv">
-              <label class="fck"><input type="checkbox" data-adv="notable"><span>⭐ Destacados</span></label>
-              <label class="fck"><input type="checkbox" data-adv="accessible"><span>♿ Accesible</span></label>
-              <label class="fck"><input type="checkbox" data-adv="free"><span>🆓 Gratis</span></label>
-              <label class="fck"><input type="checkbox" data-adv="open"><span>🕒 Abierto ahora</span></label>
-            </div>
-          </div>
-        </details>
         <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
         <div class="list" id="list"></div>
       </div>
@@ -573,19 +589,19 @@
     function gmapsSingle(dst){ var tm=mode==="car"?"driving":"walking"; return "https://www.google.com/maps/dir/?api=1&travelmode="+tm+"&origin="+encodeURIComponent(origin.lat+","+origin.lng)+"&destination="+encodeURIComponent(dst.lat+","+dst.lng); }
 
     /* ---------- Render: resultados / sitios ---------- */
-    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; byId("catList").innerHTML=""; el.list.innerHTML=""; activeTab="places"; }
+    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.list.innerHTML=""; activeTab="places"; renderChips(); }
     function updateCounts(){ el.tabPlacesN.textContent=pois.length; el.tabTripN.textContent=trip.length; }
     function inTrip(id){ for(var i=0;i<trip.length;i++) if(trip[i].id===id) return true; return false; }
 
-    function poiMarkIcon(color,sel){ return L.divIcon({ className:"poi-mark"+(sel?" is-sel":""), html:'<span class="poi-mark__pulse" style="background:'+color+'"></span><span class="poi-mark__dot" style="background:'+color+'"></span>', iconSize:[24,24], iconAnchor:[12,12] }); }
-    function highlightPoi(p){ if(selPoi&&selPoi._marker&&CATS[selPoi.cat]) selPoi._marker.setIcon(poiMarkIcon(CATS[selPoi.cat].color,false)); selPoi=p||null; if(p&&p._marker){ p._marker.setIcon(poiMarkIcon(CATS[p.cat].color,true)); if(p._marker.setZIndexOffset) p._marker.setZIndexOffset(1000); } }
+    function poiMarkIcon(color,sel){ return L.divIcon({ className:"poi-mark"+(sel?" is-sel":""), html:'<span class="poi-mark__pulse" style="background:'+color+'"></span><span class="poi-mark__dot" style="background:'+color+'"></span>', iconSize:[30,30], iconAnchor:[15,15] }); }
+    function highlightPoi(p){ if(selPoi&&selPoi._marker&&CATS[selPoi.cat]) selPoi._marker.setIcon(poiMarkIcon(CATS[selPoi.cat].color,false)); if(selPoi&&selPoi._row) selPoi._row.classList.remove("is-sel"); selPoi=p||null; if(p&&p._marker){ p._marker.setIcon(poiMarkIcon(CATS[p.cat].color,true)); if(p._marker.setZIndexOffset) p._marker.setZIndexOffset(1000); } if(p&&p._row){ p._row.classList.add("is-sel"); try{ p._row.scrollIntoView({ block:"nearest", behavior:"smooth" }); }catch(e){} } }
     function saveMapView(){ savedMapView={ c:map.getCenter(), z:map.getZoom() }; }
     function restoreMapView(){ if(savedMapView){ map.setView(savedMapView.c, savedMapView.z, {animate:true}); savedMapView=null; } }
     function focusPoiOnMap(p){ highlightPoi(p); centerOn(p.lat,p.lng,Math.max(map.getZoom(),15)); }
     function openCardFor(p){ highlightPoi(p); saveMapView(); openPoiCard(p); }
     function renderMarkers(){ poiLayer.clearLayers(); selPoi=null; pois.forEach(function(p){ if(!passesFilters(p)) return; var c=CATS[p.cat]; var mk=L.marker([p.lat,p.lng],{ icon:poiMarkIcon(c.color,false) }); mk.on("click",function(){ openCardFor(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
     function updateFiltersCount(){ var n=0; ["notable","accessible","free","open"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
-    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); box.innerHTML=""; Object.keys(CATS).forEach(function(k){ if(!counts[k]) return; var c=CATS[k]; var lab=document.createElement("label"); lab.className="fck"; lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'"></span><span>'+c.label+'</span><b>'+counts[k]+'</b>'; lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); }); box.appendChild(lab); }); updateFiltersCount(); }
+    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); if(!box) return; box.innerHTML=""; Object.keys(CATS).forEach(function(k){ var c=CATS[k]; var n=counts[k]||0; var lab=document.createElement("label"); lab.className="fck"+(n===0?" fck--empty":""); lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'"></span><span>'+c.label+'</span><b>'+n+'</b>'; lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); }); box.appendChild(lab); }); updateFiltersCount(); }
     function renderList(){ var shown=sortShown(pois.filter(passesFilters)); el.list.innerHTML="";
       shown.forEach(function(p){ var c=CATS[p.cat], wiki=wikiUrl(p.tags), notable=!!(p.tags&&(p.tags.wikipedia||p.tags.wikidata));
         var row=document.createElement("div"); row.className="poi";
@@ -595,6 +611,7 @@
         var add=document.createElement("button"); add.type="button"; add.className="poi__add"+(inTrip(p.id)?" is-in":""); add.textContent=inTrip(p.id)?"✓":"+"; add.setAttribute("aria-label",inTrip(p.id)?"Quitar de mi ruta":"Añadir a mi ruta");
         add.addEventListener("click",function(){ toggleTrip(p); }); p._addBtn=add;
         var dot=document.createElement("span"); dot.className="poi__dot"; dot.style.background=c.color;
+        p._row=row; if(selPoi&&selPoi.id===p.id) row.classList.add("is-sel");
         row.appendChild(dot); row.appendChild(body); row.appendChild(add); el.list.appendChild(row); });
       el.results.hidden=false; syncSheetHeight(); }
 
@@ -960,7 +977,9 @@
     document.addEventListener("click",function(e){ var t=e.target; if(!t||!t.closest) return; var a=t.closest('a[target="_blank"]'); if(a){ var href=a.getAttribute("href")||""; if(/^https?:/i.test(href)){ e.preventDefault(); window.open(a.href,"_blank","noopener"); } } });
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
     loadOrigin().then(function(v){ if(v){ try{ var o=JSON.parse(v); if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked"); centerOn(o.lat,o.lng,14); } }catch(e){} } });
+    renderChips();
     byId("themeFab").addEventListener("click",toggleTheme);
+    byId("resetFab").addEventListener("click",resetApp);
     byId("panelToggle").addEventListener("click",togglePanel);
     (function(){ var hnd=el.sheet.querySelector(".sheet__handle"); if(hnd) hnd.addEventListener("click",function(){ if(window.innerWidth<900) togglePanel(); }); })();
     loadTheme().then(function(v){ setTheme(v==="dark"?"dark":"light"); });
