@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#FF4D8D" />
 <title>Cerca — descubre lo que tienes cerca</title>
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Cerca" />
@@ -258,6 +258,9 @@
 
   .panel-toggle{ display:none; }
   .sheet__handle{ cursor:pointer; }
+  /* Al colapsar el panel, la barra superior también se aparta para ver el mapa entero (antes solo se reposicionaba en escritorio, nunca se ocultaba) */
+  body.panel-collapsed .topbar{ opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  .topbar{ transition:opacity .2s ease; }
   @media (max-width:899px){
     body.panel-collapsed .sheet{ transform:translateY(calc(100% - 32px)); }
     body.panel-collapsed .recenter{ bottom:48px; }
@@ -444,6 +447,10 @@
     /* Clave OpenRouteService por defecto para la isócrona real por carretera.
        AVISO: en un repositorio público esta clave queda visible en el código. */
     var DEFAULT_ORS_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjE4ZDIyMTMyZGM4NzRiMjliNzIwNWQyMmJiYTA2MmM3IiwiaCI6Im11cm11cjY0In0=";
+    // Tras desplegar el Worker de Cloudflare (ver ors-proxy-worker.js), pega aquí su URL,
+    // p.ej. "https://cerca-ors-proxy.tuusuario.workers.dev". Mientras esté vacío, se usa
+    // DEFAULT_ORS_KEY directamente (comportamiento actual, sin cambios).
+    var PROXY_URL = "";
     var useRealIso = true;
 
     /* ---------- Estado ---------- */
@@ -464,7 +471,9 @@
       museo:{label:"Museos",color:"#7C3AED",visit:75}, monumento:{label:"Monumentos",color:"#F59E0B",visit:20},
       ruinas:{label:"Ruinas",color:"#B45309",visit:45}, iglesia:{label:"Iglesias",color:"#4F46E5",visit:20},
       naturaleza:{label:"Naturaleza",color:"#10B981",visit:30}, gastronomia:{label:"Comer",color:"#EF4444",visit:60},
-      curiosidad:{label:"Curiosidades",color:"#EC4899",visit:20}
+      curiosidad:{label:"Curiosidades",color:"#EC4899",visit:20},
+      farmacia:{label:"Farmacias",color:"#06B6D4",visit:10}, recreo:{label:"Área de recreo",color:"#3B82F6",visit:30},
+      vistas:{label:"Vistas",color:"#84CC16",visit:15}
     };
     activeCats=new Set(Object.keys(CATS));
 
@@ -519,9 +528,12 @@
         if(h==="monument"||h==="memorial") return "monumento";
         return "curiosidad"; }
       if(t.tourism==="museum"||t.tourism==="gallery") return "museo";
-      if(t.tourism==="viewpoint"||t.tourism==="picnic_site") return "naturaleza";
+      if(t.tourism==="viewpoint") return "vistas";
+      if(t.tourism==="picnic_site") return "naturaleza";
       if(t.amenity==="place_of_worship") return "iglesia";
       if(t.amenity==="restaurant"||t.amenity==="cafe") return "gastronomia";
+      if(t.amenity==="pharmacy") return "farmacia";
+      if(t.leisure==="playground") return "recreo";
       if(t.natural==="peak"||t.natural==="waterfall"||t.natural==="spring"||t.waterway==="waterfall") return "naturaleza";
       return "curiosidad";
     }
@@ -538,7 +550,7 @@
       var extra=(source==="gps"&&typeof accuracy==="number")?'  <span class="muted">±'+Math.round(accuracy)+' m</span>':"";
       el.originCoords.innerHTML=fmt(lat)+", "+fmt(lng)+extra;
       el.reachBtn.disabled=false; el.recenter.classList.add("is-on");
-      resetResults(); clearReach(); byId("weather").hidden=true; updateWeather(); saveOrigin(); syncSheetHeight();
+      resetResults(); clearReach(); byId("weather").hidden=true; updateWeather(); saveOrigin(origin); syncSheetHeight();
     }
     function locate(){
       if(!("geolocation" in navigator)){ showNotice("Este dispositivo no ofrece ubicación. Toca el mapa para marcar tu punto de partida.","warn"); return; }
@@ -554,7 +566,7 @@
     function clearReach(){ if(_reachLayer){ map.removeLayer(_reachLayer); _reachLayer=null; } reach=null; }
     function drawCircleReach(minutes){ var meters=SPEED_KMH[mode]*1000/60*minutes; _reachLayer=L.circle([origin.lat,origin.lng],Object.assign({},reachStyle,{radius:meters})).addTo(map); reach={ kind:"circle", lat:origin.lat, lng:origin.lng, radiusM:meters }; fitVisible(_reachLayer.getBounds()); }
     function firstRing(arr){ if(!arr||!arr.length) return []; if(typeof arr[0].lat==="number") return arr; return firstRing(arr[0]); }
-    function fetchIsochrone(lat,lng,md,minutes,key){ var profile=md==="car"?"driving-car":"foot-walking"; return fetch("https://api.openrouteservice.org/v2/isochrones/"+profile,{ method:"POST", headers:{ "Authorization":key, "Content-Type":"application/json", "Accept":"application/geo+json" }, body:JSON.stringify({ locations:[[lng,lat]], range:[minutes*60], range_type:"time" }) }).then(function(r){ if(!r.ok) throw new Error("ORS "+r.status); return r.json(); }); }
+    function fetchIsochrone(lat,lng,md,minutes,key){ var profile=md==="car"?"driving-car":"foot-walking"; var personal=el.orsKey.value.trim(); var useProxy=!personal&&!!PROXY_URL; var url=useProxy?(PROXY_URL.replace(/\/$/,"")+"/v2/isochrones/"+profile):("https://api.openrouteservice.org/v2/isochrones/"+profile); var headers={ "Content-Type":"application/json", "Accept":"application/geo+json" }; if(!useProxy) headers["Authorization"]=key; return fetch(url,{ method:"POST", headers:headers, body:JSON.stringify({ locations:[[lng,lat]], range:[minutes*60], range_type:"time" }) }).then(function(r){ if(!r.ok) throw new Error("ORS "+r.status); return r.json(); }); }
     function getOrsKey(){ var k=el.orsKey.value.trim(); return k||DEFAULT_ORS_KEY; }
     function buildReach(){ var minutes=+el.timeRange.value; clearReach();
       if(searchMode==="corridor"){ if(!destination) return Promise.reject({ noDest:true }); var W=SPEED_KMH[mode]*1000/60*minutes; var ring=corridorPolygon(origin,destination,W); _reachLayer=L.polygon(ring,reachStyle).addTo(map); reach={ kind:"poly", ring:ring }; fitVisible(_reachLayer.getBounds()); return Promise.resolve("corredor a destino"); }
@@ -570,14 +582,17 @@
       return "[out:json][timeout:25];("
         +'nwr["tourism"~"^(museum|gallery|artwork|viewpoint|attraction|picnic_site)$"]["name"]'+bb+";"
         +'nwr["historic"]["name"]'+bb+";"
-        +'nwr["amenity"~"^(restaurant|cafe|place_of_worship)$"]["name"]'+bb+";"
+        +'nwr["amenity"~"^(restaurant|cafe|place_of_worship|pharmacy)$"]["name"]'+bb+";"
         +'nwr["natural"~"^(peak|waterfall|spring)$"]["name"]'+bb+";"
         +'nwr["waterway"="waterfall"]["name"]'+bb+";"
         +'nwr["man_made"="lighthouse"]["name"]'+bb+";"
+        +'nwr["leisure"="playground"]["name"]'+bb+";"
         +");out center 500;"; }
     function overpass(q){ return fetch(OVERPASS[0],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op "+r.status); return r.json(); })
       .catch(function(){ return fetch(OVERPASS[1],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op2 "+r.status); return r.json(); }); }); }
-    function ingest(data){ pois=[]; (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; if(!t.name) return; pois.push({ id:m.type+"/"+m.id, name:t.name, cat:classify(t), lat:lat, lng:lng, tags:t, dist:haversine(origin.lat,origin.lng,lat,lng) }); }); pois.sort(function(a,b){ return a.dist-b.dist; }); if(pois.length>DISPLAY_CAP) pois=pois.slice(0,DISPLAY_CAP); }
+    function ingest(data){ pois=[]; (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; if(!t.name) return; pois.push({ id:m.type+"/"+m.id, name:t.name, cat:classify(t), lat:lat, lng:lng, tags:t, dist:haversine(origin.lat,origin.lng,lat,lng) }); }); pois.sort(function(a,b){ return a.dist-b.dist; }); }
+    /* Resultados a mostrar: filtrados y, si superan el cap, los N más cercanos de ENTRE los filtrados */
+    function visiblePois(){ var f=pois.filter(passesFilters); return f.length>DISPLAY_CAP?f.slice(0,DISPLAY_CAP):f; }
 
     /* ---------- Ruta óptima (validado en Node) ---------- */
     function pathLen(r){ var s=0; for(var i=0;i<r.length-1;i++) s+=d(r[i],r[i+1]); return s; }
@@ -589,8 +604,8 @@
     function gmapsSingle(dst){ var tm=mode==="car"?"driving":"walking"; return "https://www.google.com/maps/dir/?api=1&travelmode="+tm+"&origin="+encodeURIComponent(origin.lat+","+origin.lng)+"&destination="+encodeURIComponent(dst.lat+","+dst.lng); }
 
     /* ---------- Render: resultados / sitios ---------- */
-    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.list.innerHTML=""; activeTab="places"; renderChips(); }
-    function updateCounts(){ el.tabPlacesN.textContent=pois.length; el.tabTripN.textContent=trip.length; }
+    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.list.innerHTML=""; activeTab="places"; selPoi=null; renderChips(); }
+    function updateCounts(){ el.tabPlacesN.textContent=visiblePois().length; el.tabTripN.textContent=trip.length; }
     function inTrip(id){ for(var i=0;i<trip.length;i++) if(trip[i].id===id) return true; return false; }
 
     function poiMarkIcon(color,sel){ return L.divIcon({ className:"poi-mark"+(sel?" is-sel":""), html:'<span class="poi-mark__pulse" style="background:'+color+'"></span><span class="poi-mark__dot" style="background:'+color+'"></span>', iconSize:[30,30], iconAnchor:[15,15] }); }
@@ -599,10 +614,10 @@
     function restoreMapView(){ if(savedMapView){ map.setView(savedMapView.c, savedMapView.z, {animate:true}); savedMapView=null; } }
     function focusPoiOnMap(p){ highlightPoi(p); centerOn(p.lat,p.lng,Math.max(map.getZoom(),15)); }
     function openCardFor(p){ highlightPoi(p); saveMapView(); openPoiCard(p); }
-    function renderMarkers(){ poiLayer.clearLayers(); selPoi=null; pois.forEach(function(p){ if(!passesFilters(p)) return; var c=CATS[p.cat]; var mk=L.marker([p.lat,p.lng],{ icon:poiMarkIcon(c.color,false) }); mk.on("click",function(){ openCardFor(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
+    function renderMarkers(){ poiLayer.clearLayers(); selPoi=null; visiblePois().forEach(function(p){ var c=CATS[p.cat]; var mk=L.marker([p.lat,p.lng],{ icon:poiMarkIcon(c.color,false), keyboard:false }); mk.on("click",function(){ openCardFor(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
     function updateFiltersCount(){ var n=0; ["notable","accessible","free","open"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
     function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); if(!box) return; box.innerHTML=""; Object.keys(CATS).forEach(function(k){ var c=CATS[k]; var n=counts[k]||0; var lab=document.createElement("label"); lab.className="fck"+(n===0?" fck--empty":""); lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'"></span><span>'+c.label+'</span><b>'+n+'</b>'; lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); }); box.appendChild(lab); }); updateFiltersCount(); }
-    function renderList(){ var shown=sortShown(pois.filter(passesFilters)); el.list.innerHTML="";
+    function renderList(){ var shown=sortShown(visiblePois()); el.list.innerHTML="";
       shown.forEach(function(p){ var c=CATS[p.cat], wiki=wikiUrl(p.tags), notable=!!(p.tags&&(p.tags.wikipedia||p.tags.wikidata));
         var row=document.createElement("div"); row.className="poi";
         var body=document.createElement("div"); body.className="poi__body";
@@ -912,18 +927,20 @@
     }
 
     /* ---------- Último origen (recordar por defecto) ---------- */
-    function saveOrigin(){ if(!origin) return; var v=JSON.stringify({lat:origin.lat,lng:origin.lng,source:origin.source}); if(artifactStore){ try{ window.storage.set("cfg:origin",v,false).catch(function(){}); }catch(e){} } else if(useLocal){ try{ window.localStorage.setItem("cfg:origin",v); }catch(e){} } }
-    function clearSavedOrigin(){ if(artifactStore){ try{ window.storage.delete("cfg:origin",false).catch(function(){}); }catch(e){} } else if(useLocal){ try{ window.localStorage.removeItem("cfg:origin"); }catch(e){} } }
-    function loadOrigin(){ var k="cfg:origin"; if(artifactStore){ return window.storage.get(k,false).then(function(r){ return r?r.value:""; }).catch(function(){ return ""; }); } if(useLocal){ try{ return Promise.resolve(window.localStorage.getItem(k)||""); }catch(e){ return Promise.resolve(""); } } return Promise.resolve(""); }
+    function saveOrigin(o){ var k="cfg:origin"; try{ if(artifactStore){ if(o) window.storage.set(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source}),false).catch(function(){}); else window.storage["delete"](k,false).catch(function(){}); } else if(useLocal){ if(o) window.localStorage.setItem(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source})); else window.localStorage.removeItem(k); } }catch(e){} }
+    
+    function loadOrigin(){ var k="cfg:origin"; try{ if(artifactStore){ return window.storage.get(k,false).then(function(r){ return r&&r.value?JSON.parse(r.value):null; }).catch(function(){ return null; }); } if(useLocal){ var s=window.localStorage.getItem(k); return Promise.resolve(s?JSON.parse(s):null); } }catch(e){} return Promise.resolve(null); }
     function resetApp(){
+      removeDestination(); setSearchMode("near"); mode="walk"; setModeUI(); el.timeRange.value=20; el.timeVal.innerHTML='20 <small>min</small>';
       origin=null; if(beacon){ map.removeLayer(beacon); beacon=null; }
-      if(destMarker){ map.removeLayer(destMarker); destMarker=null; } destination=null; settingDestination=false;
       advFilters={notable:false,accessible:false,free:false,open:false}; activeCats=new Set(Object.keys(CATS));
       try{ Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.checked=false; }); }catch(e){}
       resetResults(); clearReach(); selPoi=null; savedMapView=null;
-      el.originBox.classList.remove("is-set"); el.originLabel.textContent="Punto de partida"; el.originCoords.innerHTML='<span class="muted">Toca el mapa o pulsa GPS \u2192</span>';
+      el.originBox.classList.remove("is-set"); el.originLabel.textContent="Punto de partida"; el.originCoords.innerHTML='<span class="muted">Toca el mapa o pulsa GPS →</span>';
       el.reachBtn.disabled=true; el.recenter.classList.remove("is-on"); byId("weather").hidden=true;
-      refreshDestUI(); renderTrip(); clearSavedOrigin(); map.setView([40.2,-3.5],6); clearNotice(); syncSheetHeight();
+      renderChips(); updateCounts();
+      saveOrigin(null); document.body.classList.remove("panel-collapsed");
+      try{ map.setView([40.2,-3.5],6); }catch(e){} clearNotice(); syncSheetHeight(); try{ map.invalidateSize(); }catch(e){}
     }
 
     /* ---------- Buscar ---------- */
@@ -931,7 +948,7 @@
       buildReach().then(function(areaLabel){ showNotice("Buscando sitios en tu área…","info"); var b=_reachLayer.getBounds(), sw=b.getSouthWest(), ne=b.getNorthEast();
         return overpass(overpassQuery(sw.lat,sw.lng,ne.lat,ne.lng)).then(function(data){ ingest(data);
           if(!pois.length){ showNotice("No se han encontrado sitios en esta área. Prueba a ampliar el tiempo o mover el punto.","warn"); }
-          else { updateCounts(); renderChips(); renderMarkers(); setTab("places"); var cap=pois.length>=DISPLAY_CAP?" (los "+DISPLAY_CAP+" más cercanos)":""; showNotice(pois.length+" sitios · "+areaLabel+" · "+labelMode()+" "+minutes+" min"+cap,"ok"); }
+          else { updateCounts(); renderChips(); renderMarkers(); setTab("places"); var vp=visiblePois(); var cap=vp.length>=DISPLAY_CAP?" (los "+DISPLAY_CAP+" más cercanos)":""; showNotice(vp.length+" sitios · "+areaLabel+" · "+labelMode()+" "+minutes+" min"+cap,"ok"); }
           el.reachBtn.disabled=false; });
       }).catch(function(err){ el.reachBtn.disabled=false; if(err&&err.noDest){ showNotice("Para buscar por el camino, fija primero un destino: pulsa «Fijar destino» y toca el mapa.","warn"); return; } showNotice("No se pudieron cargar los sitios ahora (servidor ocupado o red). Inténtalo de nuevo en unos segundos.","warn"); }); }
 
@@ -973,13 +990,12 @@
     byId("searchClear").addEventListener("click",function(){ byId("placeSearch").value=""; byId("searchClear").hidden=true; byId("searchResults").hidden=true; byId("searchResults").innerHTML=""; });
     el.orsKey.addEventListener("change",function(){ saveKey(el.orsKey.value.trim()); });
     byId("isoToggle").addEventListener("change",function(){ useRealIso=byId("isoToggle").checked; });
-    byId("resetBtn").addEventListener("click",function(){ if(window.confirm("¿Reiniciar la app? Se borrará tu búsqueda, ruta y el punto guardado.")) resetApp(); });
     document.addEventListener("click",function(e){ var t=e.target; if(!t||!t.closest) return; var a=t.closest('a[target="_blank"]'); if(a){ var href=a.getAttribute("href")||""; if(/^https?:/i.test(href)){ e.preventDefault(); window.open(a.href,"_blank","noopener"); } } });
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
-    loadOrigin().then(function(v){ if(v){ try{ var o=JSON.parse(v); if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked"); centerOn(o.lat,o.lng,14); } }catch(e){} } });
+    loadOrigin().then(function(o){ if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked"); centerOn(o.lat,o.lng,14); } });
     renderChips();
     byId("themeFab").addEventListener("click",toggleTheme);
-    byId("resetFab").addEventListener("click",resetApp);
+    byId("resetFab").addEventListener("click",function(){ if(trip.length && !window.confirm("¿Reiniciar la app? Se borrará tu ruta actual ("+trip.length+" parada"+(trip.length===1?"":"s")+").")) return; resetApp(); });
     byId("panelToggle").addEventListener("click",togglePanel);
     (function(){ var hnd=el.sheet.querySelector(".sheet__handle"); if(hnd) hnd.addEventListener("click",function(){ if(window.innerWidth<900) togglePanel(); }); })();
     loadTheme().then(function(v){ setTheme(v==="dark"?"dark":"light"); });

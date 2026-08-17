@@ -2,8 +2,8 @@
    Las teselas del mapa y las búsquedas (Overpass/ORS) van a la red: no se
    interceptan y no funcionan sin conexión (el mapa offline completo es una
    función aparte, más grande). */
-const CACHE = "cerca-v6";
-const ASSETS = ["./cerca.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "cerca-v7";
+const ASSETS = ["./cerca.html", "./manifest.webmanifest", "./icon192.png", "./icon512.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
