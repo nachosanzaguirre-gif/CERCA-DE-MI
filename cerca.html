@@ -57,6 +57,8 @@
   .search-results[hidden]{ display:none; }
   .sr-item{ display:flex; align-items:flex-start; gap:10px; width:100%; text-align:left; padding:11px 13px; border:none; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; font-family:var(--font-body); }
   .sr-item:last-child{ border-bottom:none; } .sr-item:hover{ background:var(--mist); }
+  .sr-item--type{ background:var(--mist); font-weight:600; }
+  .sr-item--type .sr-item__pin{ font-size:16px; }
   .sr-item__pin{ flex:0 0 auto; } .sr-item__txt{ font-size:13.5px; color:var(--ink); line-height:1.3; }
   .sr-empty{ padding:14px; text-align:center; color:var(--ink-soft); font-size:13px; }
   .poi__star{ color:#F59E0B; margin-right:4px; }
@@ -123,7 +125,23 @@
   .fck{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:9px; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; }
   .fck:hover{ background:var(--mist); }
   .fck input{ width:19px; height:19px; accent-color:var(--go); cursor:pointer; flex:0 0 auto; }
-  .fck__dot{ width:11px; height:11px; border-radius:50%; flex:0 0 auto; }
+  .fck__dot{ width:22px; height:22px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:12px; line-height:1; }
+  .filters__presets{ display:flex; flex-wrap:wrap; gap:6px; padding-bottom:10px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+  .preset-chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--ink-soft); background:var(--mist); border:1px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .15s ease; }
+  .preset-chip:active{ transform:scale(.96); }
+  .filters__catsHead{ display:flex; align-items:center; justify-content:space-between; padding:2px 6px 6px; font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; }
+  .filters__bulk{ display:flex; gap:8px; }
+  .filters__bulk button{ background:none; border:none; padding:0; font:inherit; font-size:12px; font-weight:700; color:var(--sun-2); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .catgroup{ margin-bottom:4px; border-bottom:1px solid var(--line); }
+  .catgroup:last-child{ border-bottom:none; }
+  .catgroup__sum{ list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:9px 6px; font-size:13px; font-weight:700; color:var(--ink); border-radius:8px; }
+  .catgroup__sum::-webkit-details-marker{ display:none; }
+  .catgroup__sum:hover{ background:var(--mist); }
+  .catgroup__label{ display:flex; align-items:center; gap:6px; }
+  .catgroup__arrow{ display:inline-block; font-size:11px; color:var(--ink-soft); transition:transform .15s ease; }
+  .catgroup[open] .catgroup__arrow{ transform:rotate(90deg); }
+  .catgroup__count{ font-size:11px; font-weight:700; color:var(--ink-soft); background:var(--mist); border-radius:999px; padding:2px 8px; flex:0 0 auto; }
+  .catgroup__body{ padding-left:4px; }
   .fck b{ margin-left:auto; color:var(--ink-soft); font-weight:700; }
   .surprise{ flex:0 0 auto; width:100%; margin-bottom:12px; padding:12px; border:none; border-radius:12px; background:linear-gradient(100deg,var(--sun-1),var(--sun-2) 55%,var(--sun-3)); color:#fff; font-family:var(--font-body); font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(255,77,141,.6); }
   .surprise:active{ transform:translateY(1px); }
@@ -307,7 +325,7 @@
     <div class="search-wrap">
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input class="search__input" id="placeSearch" type="text" placeholder="Busca un lugar, dirección, pueblo…" autocomplete="off" enterkeyhint="search" />
+        <input class="search__input" id="placeSearch" type="text" placeholder="Lugar, dirección o tipo de sitio…" autocomplete="off" enterkeyhint="search" />
         <button class="search__clear" id="searchClear" type="button" hidden aria-label="Limpiar búsqueda">×</button>
       </div>
       <div class="search-results" id="searchResults" hidden></div>
@@ -336,6 +354,15 @@
     <details class="filters" id="filtersBox">
       <summary class="filters__sum"><span>Filtros (aplícalos antes de buscar)</span><span class="filters__count" id="filtersCount"></span></summary>
       <div class="filters__body">
+        <div class="filters__presets" id="presetsList">
+          <button type="button" class="preset-chip" data-preset="turismo">🏛️ Turismo</button>
+          <button type="button" class="preset-chip" data-preset="ninos">🛝 Con niños</button>
+          <button type="button" class="preset-chip" data-preset="comer">🍽️ Comer y beber</button>
+        </div>
+        <div class="filters__catsHead">
+          <span>Categorías</span>
+          <span class="filters__bulk"><button type="button" id="catsAllBtn">Todas</button><button type="button" id="catsNoneBtn">Ninguna</button></span>
+        </div>
         <div class="filters__cats" id="catList"></div>
         <div class="filters__adv">
           <label class="fck"><input type="checkbox" data-adv="notable"><span>⭐ Destacados</span></label>
@@ -468,14 +495,20 @@
     var reachStyle={ color:"#FF4D8D", weight:2, opacity:.9, fillColor:"#FF4D8D", fillOpacity:.10 };
     var OVERPASS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
     var CATS={
-      museo:{label:"Museos",color:"#7C3AED",visit:75}, monumento:{label:"Monumentos",color:"#F59E0B",visit:20},
-      ruinas:{label:"Ruinas",color:"#B45309",visit:45}, iglesia:{label:"Iglesias",color:"#4F46E5",visit:20},
-      naturaleza:{label:"Naturaleza",color:"#10B981",visit:30}, gastronomia:{label:"Comer",color:"#EF4444",visit:60},
-      curiosidad:{label:"Curiosidades",color:"#EC4899",visit:20},
-      farmacia:{label:"Farmacias",color:"#06B6D4",visit:10}, recreo:{label:"Área de recreo",color:"#3B82F6",visit:30},
-      vistas:{label:"Vistas",color:"#84CC16",visit:15}
+      museo:{label:"Museos",color:"#7C3AED",visit:75,icon:"🏛️"}, monumento:{label:"Monumentos",color:"#F59E0B",visit:20,icon:"🗿"},
+      ruinas:{label:"Ruinas",color:"#B45309",visit:45,icon:"🏰"}, iglesia:{label:"Iglesias",color:"#4F46E5",visit:20,icon:"⛪"},
+      naturaleza:{label:"Naturaleza",color:"#10B981",visit:30,icon:"🌲"}, curiosidad:{label:"Curiosidades",color:"#EC4899",visit:20,icon:"✨"},
+      farmacia:{label:"Farmacias",color:"#06B6D4",visit:10,icon:"💊"}, recreo:{label:"Área de recreo",color:"#3B82F6",visit:30,icon:"🛝"},
+      vistas:{label:"Vistas",color:"#84CC16",visit:15,icon:"🌄"},
+      restaurante:{label:"Restaurantes",color:"#EF4444",visit:60,icon:"🍽️"}, cafeteria:{label:"Cafeterías",color:"#92400E",visit:30,icon:"☕"},
+      heladeria:{label:"Heladerías",color:"#F9A8D4",visit:15,icon:"🍦"}, comidarapida:{label:"Comida rápida",color:"#FB923C",visit:20,icon:"🍔"},
+      bares:{label:"Bares y vida nocturna",color:"#A21CAF",visit:60,icon:"🍺"},
+      compras:{label:"Compras",color:"#0D9488",visit:30,icon:"🛒"}, aseos:{label:"Aseos públicos",color:"#64748B",visit:5,icon:"🚻"},
+      cajeros:{label:"Cajeros y bancos",color:"#CA8A04",visit:5,icon:"🏧"}, fuentes:{label:"Fuentes de agua",color:"#0284C7",visit:5,icon:"🚰"},
+      alojamiento:{label:"Alojamiento",color:"#334155",visit:5,icon:"🛏️"}, deporte:{label:"Deporte",color:"#65A30D",visit:60,icon:"🏋️"},
+      parques:{label:"Parques y jardines",color:"#4ADE80",visit:30,icon:"🌳"}
     };
-    activeCats=new Set(Object.keys(CATS));
+    activeCats=new Set();
 
     /* ---------- Mapa ---------- */
     var map=L.map("map",{ zoomControl:true, attributionControl:true }).setView([40.2,-3.5],6);
@@ -530,10 +563,22 @@
       if(t.tourism==="museum"||t.tourism==="gallery") return "museo";
       if(t.tourism==="viewpoint") return "vistas";
       if(t.tourism==="picnic_site") return "naturaleza";
+      if(t.tourism==="hotel"||t.tourism==="hostel"||t.tourism==="guest_house") return "alojamiento";
       if(t.amenity==="place_of_worship") return "iglesia";
-      if(t.amenity==="restaurant"||t.amenity==="cafe") return "gastronomia";
+      if(t.amenity==="restaurant") return "restaurante";
+      if(t.amenity==="cafe") return "cafeteria";
+      if(t.amenity==="ice_cream") return "heladeria";
+      if(t.amenity==="fast_food") return "comidarapida";
+      if(t.amenity==="bar"||t.amenity==="pub"||t.amenity==="nightclub") return "bares";
       if(t.amenity==="pharmacy") return "farmacia";
+      if(t.amenity==="toilets") return "aseos";
+      if(t.amenity==="atm"||t.amenity==="bank") return "cajeros";
+      if(t.amenity==="drinking_water") return "fuentes";
       if(t.leisure==="playground") return "recreo";
+      if(t.leisure==="fitness_centre"||t.leisure==="sports_centre") return "deporte";
+      if(t.leisure==="park"||t.leisure==="garden") return "parques";
+      if(t.shop==="supermarket"||t.shop==="mall"||t.shop==="convenience"||t.shop==="department_store") return "compras";
+      if(t.amenity==="marketplace") return "compras";
       if(t.natural==="peak"||t.natural==="waterfall"||t.natural==="spring"||t.waterway==="waterfall") return "naturaleza";
       return "curiosidad";
     }
@@ -580,17 +625,19 @@
     /* ---------- Overpass ---------- */
     function overpassQuery(s,w,n,e){ var bb="("+s+","+w+","+n+","+e+")";
       return "[out:json][timeout:25];("
-        +'nwr["tourism"~"^(museum|gallery|artwork|viewpoint|attraction|picnic_site)$"]["name"]'+bb+";"
+        +'nwr["tourism"~"^(museum|gallery|artwork|viewpoint|attraction|picnic_site|hotel|hostel|guest_house)$"]["name"]'+bb+";"
         +'nwr["historic"]["name"]'+bb+";"
-        +'nwr["amenity"~"^(restaurant|cafe|place_of_worship|pharmacy)$"]["name"]'+bb+";"
+        +'nwr["amenity"~"^(restaurant|cafe|place_of_worship|pharmacy|ice_cream|fast_food|bar|pub|nightclub|bank|marketplace)$"]["name"]'+bb+";"
+        +'nwr["amenity"~"^(toilets|atm|drinking_water)$"]'+bb+";"
         +'nwr["natural"~"^(peak|waterfall|spring)$"]["name"]'+bb+";"
         +'nwr["waterway"="waterfall"]["name"]'+bb+";"
         +'nwr["man_made"="lighthouse"]["name"]'+bb+";"
-        +'nwr["leisure"="playground"]["name"]'+bb+";"
+        +'nwr["leisure"~"^(playground|fitness_centre|sports_centre|park|garden)$"]["name"]'+bb+";"
+        +'nwr["shop"~"^(supermarket|mall|convenience|department_store)$"]["name"]'+bb+";"
         +");out center 500;"; }
     function overpass(q){ return fetch(OVERPASS[0],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op "+r.status); return r.json(); })
       .catch(function(){ return fetch(OVERPASS[1],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op2 "+r.status); return r.json(); }); }); }
-    function ingest(data){ pois=[]; (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; if(!t.name) return; pois.push({ id:m.type+"/"+m.id, name:t.name, cat:classify(t), lat:lat, lng:lng, tags:t, dist:haversine(origin.lat,origin.lng,lat,lng) }); }); pois.sort(function(a,b){ return a.dist-b.dist; }); }
+    function ingest(data){ pois=[]; (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; var nm=t.name; if(!nm){ if(t.amenity==="toilets") nm="Aseos públicos"; else if(t.amenity==="atm") nm="Cajero automático"; else if(t.amenity==="drinking_water") nm="Fuente de agua potable"; } if(!nm) return; pois.push({ id:m.type+"/"+m.id, name:nm, cat:classify(t), lat:lat, lng:lng, tags:t, dist:haversine(origin.lat,origin.lng,lat,lng) }); }); pois.sort(function(a,b){ return a.dist-b.dist; }); }
     /* Resultados a mostrar: filtrados y, si superan el cap, los N más cercanos de ENTRE los filtrados */
     function visiblePois(){ var f=pois.filter(passesFilters); return f.length>DISPLAY_CAP?f.slice(0,DISPLAY_CAP):f; }
 
@@ -604,7 +651,7 @@
     function gmapsSingle(dst){ var tm=mode==="car"?"driving":"walking"; return "https://www.google.com/maps/dir/?api=1&travelmode="+tm+"&origin="+encodeURIComponent(origin.lat+","+origin.lng)+"&destination="+encodeURIComponent(dst.lat+","+dst.lng); }
 
     /* ---------- Render: resultados / sitios ---------- */
-    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.list.innerHTML=""; activeTab="places"; selPoi=null; renderChips(); }
+    function resetResults(){ pois=[]; poiLayer.clearLayers(); trip=[]; routeReady=false; lastRoute=null; routeLayer.clearLayers(); el.results.hidden=true; el.list.innerHTML=""; activeTab="places"; selPoi=null; Object.keys(CATS).forEach(function(k){ if(k.indexOf("_ah_")===0){ delete CATS[k]; activeCats.delete(k); } }); renderChips(); }
     function updateCounts(){ el.tabPlacesN.textContent=visiblePois().length; el.tabTripN.textContent=trip.length; }
     function inTrip(id){ for(var i=0;i<trip.length;i++) if(trip[i].id===id) return true; return false; }
 
@@ -616,7 +663,28 @@
     function openCardFor(p){ highlightPoi(p); saveMapView(); openPoiCard(p); }
     function renderMarkers(){ poiLayer.clearLayers(); selPoi=null; visiblePois().forEach(function(p){ var c=CATS[p.cat]; var mk=L.marker([p.lat,p.lng],{ icon:poiMarkIcon(c.color,false), keyboard:false }); mk.on("click",function(){ openCardFor(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
     function updateFiltersCount(){ var n=0; ["notable","accessible","free","open"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
-    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); if(!box) return; box.innerHTML=""; Object.keys(CATS).forEach(function(k){ var c=CATS[k]; var n=counts[k]||0; var lab=document.createElement("label"); lab.className="fck"+(n===0?" fck--empty":""); lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'"></span><span>'+c.label+'</span><b>'+n+'</b>'; lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); }); box.appendChild(lab); }); updateFiltersCount(); }
+    var CAT_GROUPS={ museo:"Turismo y cultura",monumento:"Turismo y cultura",ruinas:"Turismo y cultura",iglesia:"Turismo y cultura",curiosidad:"Turismo y cultura",vistas:"Turismo y cultura",
+      restaurante:"Comer y beber",cafeteria:"Comer y beber",heladeria:"Comer y beber",comidarapida:"Comer y beber",bares:"Comer y beber",
+      naturaleza:"Naturaleza y ocio",recreo:"Naturaleza y ocio",parques:"Naturaleza y ocio",deporte:"Naturaleza y ocio",
+      farmacia:"Prácticos",compras:"Prácticos",aseos:"Prácticos",cajeros:"Prácticos",fuentes:"Prácticos",alojamiento:"Prácticos" };
+    var GROUP_ORDER=["Turismo y cultura","Comer y beber","Naturaleza y ocio","Prácticos"];
+    function updateGroupCount(det,keys){ var n=keys.filter(function(k){ return activeCats.has(k); }).length; var b=det.querySelector(".catgroup__count"); if(b) b.textContent=n+"/"+keys.length; }
+    function renderChips(){ var counts={}; pois.forEach(function(p){ counts[p.cat]=(counts[p.cat]||0)+1; }); var box=byId("catList"); if(!box) return; box.innerHTML="";
+      var byGroup={}; Object.keys(CATS).forEach(function(k){ var g=CAT_GROUPS[k]||"Otros"; (byGroup[g]=byGroup[g]||[]).push(k); });
+      var order=GROUP_ORDER.slice(); if(byGroup["Otros"]&&order.indexOf("Otros")===-1) order.push("Otros");
+      order.forEach(function(g){ var keys=byGroup[g]; if(!keys||!keys.length) return;
+        var activeInGroup=keys.filter(function(k){ return activeCats.has(k); }).length;
+        var det=document.createElement("details"); det.className="catgroup"; if(activeInGroup>0) det.open=true;
+        var sum=document.createElement("summary"); sum.className="catgroup__sum";
+        sum.innerHTML='<span class="catgroup__label"><span class="catgroup__arrow">▸</span>'+g+'</span><span class="catgroup__count">'+activeInGroup+'/'+keys.length+'</span>';
+        det.appendChild(sum);
+        var body=document.createElement("div"); body.className="catgroup__body";
+        keys.forEach(function(k){ var c=CATS[k]; var n=counts[k]||0; var lab=document.createElement("label"); lab.className="fck"+(n===0?" fck--empty":"");
+          lab.innerHTML='<input type="checkbox" data-cat="'+k+'"'+(activeCats.has(k)?" checked":"")+'><span class="fck__dot" style="background:'+c.color+'">'+c.icon+'</span><span>'+c.label+'</span><b>'+n+'</b>';
+          lab.querySelector("input").addEventListener("change",function(e){ if(e.target.checked) activeCats.add(k); else activeCats.delete(k); renderMarkers(); renderList(); updateFiltersCount(); updateGroupCount(det,keys); });
+          body.appendChild(lab); });
+        det.appendChild(body); box.appendChild(det); });
+      updateFiltersCount(); }
     function renderList(){ var shown=sortShown(visiblePois()); el.list.innerHTML="";
       shown.forEach(function(p){ var c=CATS[p.cat], wiki=wikiUrl(p.tags), notable=!!(p.tags&&(p.tags.wikipedia||p.tags.wikidata));
         var row=document.createElement("div"); row.className="poi";
@@ -768,12 +836,64 @@
     /* ---------- Buscador por texto (geocodificación Nominatim) ---------- */
     var geoTimer=null;
     function geocode(q){ return fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q="+encodeURIComponent(q),{ headers:{ "Accept":"application/json" } }).then(function(r){ if(!r.ok) throw new Error("geo "+r.status); return r.json(); }); }
+
+    /* ---------- Buscar por tipo de lugar (sin usar los filtros) ---------- */
+    function normTerm(s){ return (s||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/s$/,"").trim(); }
+    var CAT_SYNONYMS={ "super":"compras","supermercado":"compras","mercado":"compras","tienda":"compras","centro comercial":"compras",
+      "hotel":"alojamiento","hostal":"alojamiento","albergue":"alojamiento","gimnasio":"deporte","piscina":"deporte","polideportivo":"deporte",
+      "parque":"parques","jardin":"parques","bar":"bares","pub":"bares","discoteca":"bares","copas":"bares","comer":"restaurante",
+      "cafe":"cafeteria","helado":"heladeria","hamburgueseria":"comidarapida","kebab":"comidarapida","mirador":"vistas","vista":"vistas",
+      "castillo":"ruinas","fortaleza":"ruinas","catedral":"iglesia","capilla":"iglesia","galeria":"museo","banco":"cajeros","cajero":"cajeros",
+      "bano":"aseos","aseo":"aseos","wc":"aseos","servicio":"aseos","fuente":"fuentes","agua":"fuentes" };
+    var AD_HOC_TERMS={ "gasolinera":{key:"amenity",val:"fuel",label:"Gasolineras",color:"#DC2626",icon:"⛽"}, "gasolina":{key:"amenity",val:"fuel",label:"Gasolineras",color:"#DC2626",icon:"⛽"},
+      "cargador":{key:"amenity",val:"charging_station",label:"Puntos de recarga",color:"#16A34A",icon:"🔌"}, "veterinario":{key:"amenity",val:"veterinary",label:"Veterinarios",color:"#059669",icon:"🐾"},
+      "peluqueria":{key:"shop",val:"hairdresser",label:"Peluquerías",color:"#DB2777",icon:"💇"}, "panaderia":{key:"shop",val:"bakery",label:"Panaderías",color:"#B45309",icon:"🥖"},
+      "zapateria":{key:"shop",val:"shoes",label:"Zapaterías",color:"#78716C",icon:"👟"}, "ropa":{key:"shop",val:"clothes",label:"Tiendas de ropa",color:"#DB2777",icon:"👕"},
+      "libreria":{key:"shop",val:"books",label:"Librerías",color:"#7C2D12",icon:"📚"}, "ferreteria":{key:"shop",val:"hardware",label:"Ferreterías",color:"#57534E",icon:"🔧"},
+      "optica":{key:"shop",val:"optician",label:"Ópticas",color:"#0369A1",icon:"👓"}, "dentista":{key:"amenity",val:"dentist",label:"Dentistas",color:"#0EA5E9",icon:"🦷"},
+      "hospital":{key:"amenity",val:"hospital",label:"Hospitales",color:"#DC2626",icon:"🏥"}, "clinica":{key:"amenity",val:"clinic",label:"Clínicas",color:"#DC2626",icon:"🏥"},
+      "colegio":{key:"amenity",val:"school",label:"Colegios",color:"#CA8A04",icon:"🏫"}, "escuela":{key:"amenity",val:"school",label:"Colegios",color:"#CA8A04",icon:"🏫"},
+      "universidad":{key:"amenity",val:"university",label:"Universidades",color:"#7C3AED",icon:"🎓"}, "biblioteca":{key:"amenity",val:"library",label:"Bibliotecas",color:"#4F46E5",icon:"📖"},
+      "correos":{key:"amenity",val:"post_office",label:"Oficinas de correos",color:"#EAB308",icon:"📮"}, "taller":{key:"shop",val:"car_repair",label:"Talleres mecánicos",color:"#57534E",icon:"🔧"},
+      "lavanderia":{key:"shop",val:"laundry",label:"Lavanderías",color:"#0891B2",icon:"🧺"}, "aparcamiento":{key:"amenity",val:"parking",label:"Aparcamientos",color:"#475569",icon:"🅿️"},
+      "parking":{key:"amenity",val:"parking",label:"Aparcamientos",color:"#475569",icon:"🅿️"}, "cine":{key:"amenity",val:"cinema",label:"Cines",color:"#7C3AED",icon:"🎬"},
+      "teatro":{key:"amenity",val:"theatre",label:"Teatros",color:"#A21CAF",icon:"🎭"} };
+    function matchSearchTerm(raw){ var q=normTerm(raw); if(q.length<3) return null;
+      var catKeys=Object.keys(CATS);
+      for(var i=0;i<catKeys.length;i++){ var k=catKeys[i]; if(normTerm(k)===q||normTerm(CATS[k].label)===q) return {type:"cat",key:k}; }
+      if(CAT_SYNONYMS[q]) return {type:"cat",key:CAT_SYNONYMS[q]};
+      if(AD_HOC_TERMS[q]) return {type:"adhoc",term:q,def:AD_HOC_TERMS[q]};
+      return null; }
+    function ensureArea(){ if(_reachLayer) return Promise.resolve(); if(!origin) return Promise.reject({noOrigin:true}); return buildReach(); }
+    function searchAdHocTag(term,def){
+      ensureArea().then(function(){
+        var catKey="_ah_"+term.replace(/[^a-z0-9]/g,"");
+        if(!CATS[catKey]) CATS[catKey]={ label:def.label,color:def.color,icon:def.icon,visit:20 };
+        var b=_reachLayer.getBounds(), sw=b.getSouthWest(), ne=b.getNorthEast(); var bb="("+sw.lat+","+sw.lng+","+ne.lat+","+ne.lng+")";
+        var q="[out:json][timeout:25];(nwr[\""+def.key+"\"=\""+def.val+"\"]"+bb+";);out center 200;";
+        showNotice("Buscando "+def.label.toLowerCase()+"…","info");
+        overpass(q).then(function(data){
+          var existing={}; pois.forEach(function(p){ existing[p.id]=true; }); var added=0;
+          (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; var nm=t.name||def.label; var id=m.type+"/"+m.id; if(existing[id]) return; pois.push({ id:id,name:nm,cat:catKey,lat:lat,lng:lng,tags:t,dist:haversine(origin.lat,origin.lng,lat,lng) }); existing[id]=true; added++; });
+          pois.sort(function(a,b){ return a.dist-b.dist; }); activeCats.add(catKey);
+          updateCounts(); renderChips(); renderMarkers(); renderList(); setTab("places");
+          showNotice(added?(added+" "+def.label.toLowerCase()+" encontrados"):("No se han encontrado "+def.label.toLowerCase()+" en esta área."),added?"ok":"warn");
+        }).catch(function(){ showNotice("No se pudo buscar "+def.label.toLowerCase()+" ahora.","warn"); });
+      }).catch(function(err){ if(err&&err.noOrigin) showNotice("Marca primero un punto de partida.","warn"); else if(err&&err.noDest) showNotice("Para buscar por el camino, fija primero un destino: pulsa «Fijar destino» y toca el mapa.","warn"); else showNotice("No se pudo calcular el área de búsqueda.","warn"); }); }
+    function runTermSearch(match){ byId("searchResults").hidden=true; byId("searchResults").innerHTML=""; byId("placeSearch").value=""; byId("searchClear").hidden=true;
+      if(!origin){ showNotice("Marca primero un punto de partida.","warn"); return; }
+      if(match.type==="cat"){ activeCats.add(match.key); if(pois.length){ renderChips(); renderMarkers(); renderList(); setTab("places"); showNotice("Mostrando "+CATS[match.key].label.toLowerCase(),"ok"); } else { renderChips(); searchPlaces(); } return; }
+      searchAdHocTag(match.term,match.def); }
     function renderSearch(){ var q=(byId("placeSearch").value||"").trim(); var box=byId("searchResults");
       if(q.length<3){ box.hidden=true; box.innerHTML=""; return; }
-      box.hidden=false; box.innerHTML='<div class="sr-empty">Buscando…</div>';
-      geocode(q).then(function(arr){ if(!arr||!arr.length){ box.innerHTML='<div class="sr-empty">Sin resultados.</div>'; return; } box.innerHTML="";
+      box.hidden=false; var match=matchSearchTerm(q);
+      function paintMatch(extra){ box.innerHTML=""; if(match){ var label=match.type==="cat"?CATS[match.key].label:match.def.label; var icon=match.type==="cat"?(CATS[match.key].icon||"🔍"):match.def.icon; var mb=document.createElement("button"); mb.type="button"; mb.className="sr-item sr-item--type"; mb.innerHTML='<span class="sr-item__pin" aria-hidden="true">'+icon+'</span><span class="sr-item__txt">Ver <b>'+esc(label)+'</b> cerca</span>'; mb.addEventListener("click",function(){ runTermSearch(match); }); box.appendChild(mb); } if(extra) box.appendChild(extra); }
+      var loading=document.createElement("div"); loading.className="sr-empty"; loading.textContent="Buscando…"; paintMatch(loading);
+      geocode(q).then(function(arr){
+        if(!arr||!arr.length){ var empty=document.createElement("div"); empty.className="sr-empty"; empty.textContent="Sin resultados."; paintMatch(match?null:empty); return; }
+        paintMatch(null);
         arr.forEach(function(r){ var lat=parseFloat(r.lat), lng=parseFloat(r.lon); if(isNaN(lat)||isNaN(lng)) return; var it=document.createElement("button"); it.type="button"; it.className="sr-item"; it.innerHTML='<span class="sr-item__pin" aria-hidden="true">📍</span><span class="sr-item__txt">'+esc(r.display_name)+'</span>'; it.addEventListener("click",function(){ selectGeocode(lat,lng); }); box.appendChild(it); });
-      }).catch(function(){ box.innerHTML='<div class="sr-empty">No se pudo buscar ahora (servidor o red). Prueba de nuevo.</div>'; }); }
+      }).catch(function(){ var err=document.createElement("div"); err.className="sr-empty"; err.textContent="No se pudo buscar ahora (servidor o red). Prueba de nuevo."; paintMatch(err); }); }
     function selectGeocode(lat,lng){ var box=byId("searchResults"); box.hidden=true; box.innerHTML=""; byId("placeSearch").value=""; byId("searchClear").hidden=true;
       if(settingDestination){ setDestination(lat,lng); } else { setOrigin(lat,lng,"search"); } centerOn(lat,lng,14); }
 
@@ -933,7 +1053,7 @@
     function resetApp(){
       removeDestination(); setSearchMode("near"); mode="walk"; setModeUI(); el.timeRange.value=20; el.timeVal.innerHTML='20 <small>min</small>';
       origin=null; if(beacon){ map.removeLayer(beacon); beacon=null; }
-      advFilters={notable:false,accessible:false,free:false,open:false}; activeCats=new Set(Object.keys(CATS));
+      advFilters={notable:false,accessible:false,free:false,open:false}; activeCats=new Set();
       try{ Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.checked=false; }); }catch(e){}
       resetResults(); clearReach(); selPoi=null; savedMapView=null;
       el.originBox.classList.remove("is-set"); el.originLabel.textContent="Punto de partida"; el.originCoords.innerHTML='<span class="muted">Toca el mapa o pulsa GPS →</span>';
@@ -948,7 +1068,10 @@
       buildReach().then(function(areaLabel){ showNotice("Buscando sitios en tu área…","info"); var b=_reachLayer.getBounds(), sw=b.getSouthWest(), ne=b.getNorthEast();
         return overpass(overpassQuery(sw.lat,sw.lng,ne.lat,ne.lng)).then(function(data){ ingest(data);
           if(!pois.length){ showNotice("No se han encontrado sitios en esta área. Prueba a ampliar el tiempo o mover el punto.","warn"); }
-          else { updateCounts(); renderChips(); renderMarkers(); setTab("places"); var vp=visiblePois(); var cap=vp.length>=DISPLAY_CAP?" (los "+DISPLAY_CAP+" más cercanos)":""; showNotice(vp.length+" sitios · "+areaLabel+" · "+labelMode()+" "+minutes+" min"+cap,"ok"); }
+          else { updateCounts(); renderChips(); renderMarkers(); setTab("places"); var vp=visiblePois();
+            if(activeCats.size===0){ showNotice(pois.length+" sitios en el área — elige una categoría o usa un acceso rápido para verlos.","warn"); }
+            else if(!vp.length){ showNotice("Ninguno de los sitios encontrados coincide con tus categorías activas.","warn"); }
+            else { var cap=vp.length>=DISPLAY_CAP?" (los "+DISPLAY_CAP+" más cercanos)":""; showNotice(vp.length+" sitios · "+areaLabel+" · "+labelMode()+" "+minutes+" min"+cap,"ok"); } }
           el.reachBtn.disabled=false; });
       }).catch(function(err){ el.reachBtn.disabled=false; if(err&&err.noDest){ showNotice("Para buscar por el camino, fija primero un destino: pulsa «Fijar destino» y toca el mapa.","warn"); return; } showNotice("No se pudieron cargar los sitios ahora (servidor ocupado o red). Inténtalo de nuevo en unos segundos.","warn"); }); }
 
@@ -972,6 +1095,10 @@
     el.tabTrip.addEventListener("click",function(){ setTab("trip"); });
     byId("surpriseBtn").addEventListener("click",surprise);
     Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.addEventListener("change",function(){ advFilters[cb.getAttribute("data-adv")]=cb.checked; renderMarkers(); renderList(); updateFiltersCount(); }); });
+    byId("catsAllBtn").addEventListener("click",function(){ activeCats=new Set(Object.keys(CATS)); renderChips(); renderMarkers(); renderList(); });
+    byId("catsNoneBtn").addEventListener("click",function(){ activeCats=new Set(); renderChips(); renderMarkers(); renderList(); });
+    var PRESETS={ turismo:["museo","monumento","ruinas","iglesia","vistas"], ninos:["recreo","parques","heladeria","aseos"], comer:["restaurante","cafeteria","heladeria","comidarapida","bares"] };
+    Array.prototype.forEach.call(document.querySelectorAll("#presetsList .preset-chip"),function(btn){ btn.addEventListener("click",function(){ activeCats=new Set(PRESETS[btn.getAttribute("data-preset")]||[]); renderChips(); renderMarkers(); renderList(); }); });
     byId("sortSel").addEventListener("change",function(){ sortMode=byId("sortSel").value; renderList(); });
     el.genBtn.addEventListener("click",generateRoute);
     el.mapsBtn.addEventListener("click",function(){ if(lastRoute) window.open(gmapsRoute(lastRoute),"_blank","noopener"); });
