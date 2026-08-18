@@ -279,9 +279,18 @@
   /* Al colapsar el panel, la barra superior también se aparta para ver el mapa entero (antes solo se reposicionaba en escritorio, nunca se ocultaba) */
   body.panel-collapsed .topbar{ opacity:0; pointer-events:none; transition:opacity .2s ease; }
   .topbar{ transition:opacity .2s ease; }
+  /* Botón "ver mapa completo" dentro del panel (solo móvil) */
+  .sheet__minimize{ display:none; }
+  /* Botón flotante para restaurar el panel cuando está minimizado */
+  .restore-fab{ display:none; position:fixed; z-index:600; left:50%; transform:translateX(-50%); bottom:max(18px,env(safe-area-inset-bottom)); align-items:center; gap:8px; padding:12px 20px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 20px rgba(23,22,53,.35); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; }
+  .restore-fab svg{ width:18px; height:18px; }
+  .restore-fab:active{ transform:translateX(-50%) scale(.96); }
+  body.panel-collapsed .restore-fab{ display:inline-flex; }
   @media (max-width:899px){
-    body.panel-collapsed .sheet{ transform:translateY(calc(100% - 32px)); }
-    body.panel-collapsed .recenter{ bottom:48px; }
+    body.panel-collapsed .sheet{ transform:translateY(100%); }
+    body.panel-collapsed .recenter{ bottom:82px; }
+    .sheet__minimize{ display:inline-flex; align-items:center; justify-content:center; gap:7px; width:100%; margin-top:10px; padding:11px; background:var(--mist); color:var(--ink-soft); border:1px solid var(--line); border-radius:12px; font-family:var(--font-body); font-size:13.5px; font-weight:700; cursor:pointer; }
+    .sheet__minimize svg{ width:17px; height:17px; }
   }
 
   /* ---------- Escritorio: panel lateral en vez de hoja inferior ---------- */
@@ -424,7 +433,11 @@
         </div>
       </div>
     </div>
+
+    <button class="sheet__minimize" id="minimizeBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4a1 1 0 0 1-1 1H3"/><path d="M16 3v4a1 1 0 0 0 1 1h4"/><path d="M8 21v-4a1 1 0 0 0-1-1H3"/><path d="M16 21v-4a1 1 0 0 1 1-1h4"/></svg> Ver mapa completo</button>
   </section>
+
+  <button class="restore-fab" id="restoreFab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg> Mostrar panel</button>
 
   <div class="modal" id="savedModal" hidden>
     <div class="modal__backdrop" id="savedBackdrop"></div>
@@ -690,7 +703,7 @@
         var row=document.createElement("div"); row.className="poi";
         var body=document.createElement("div"); body.className="poi__body";
         body.innerHTML='<div class="poi__name">'+(notable?'<span class="poi__star" title="Destacado">★</span>':'')+esc(p.name)+'</div><div class="poi__meta">'+c.label+' · <span class="poi__dist">'+fmtDist(p.dist)+'</span> · ~'+c.visit+' min'+(wiki?' · <a class="poi__wiki" href="'+wiki+'" target="_blank" rel="noopener">Wikipedia</a>':'')+'</div>';
-        body.addEventListener("click",function(ev){ if(ev.target.closest(".poi__wiki")) return; focusPoiOnMap(p); });
+        body.addEventListener("click",function(ev){ if(ev.target.closest(".poi__wiki")) return; focusPoiOnMap(p); saveMapView(); openPoiCard(p); });
         var add=document.createElement("button"); add.type="button"; add.className="poi__add"+(inTrip(p.id)?" is-in":""); add.textContent=inTrip(p.id)?"✓":"+"; add.setAttribute("aria-label",inTrip(p.id)?"Quitar de mi ruta":"Añadir a mi ruta");
         add.addEventListener("click",function(){ toggleTrip(p); }); p._addBtn=add;
         var dot=document.createElement("span"); dot.className="poi__dot"; dot.style.background=c.color;
@@ -1124,6 +1137,8 @@
     byId("themeFab").addEventListener("click",toggleTheme);
     byId("resetFab").addEventListener("click",function(){ if(trip.length && !window.confirm("¿Reiniciar la app? Se borrará tu ruta actual ("+trip.length+" parada"+(trip.length===1?"":"s")+").")) return; resetApp(); });
     byId("panelToggle").addEventListener("click",togglePanel);
+    byId("minimizeBtn").addEventListener("click",function(){ if(!document.body.classList.contains("panel-collapsed")) togglePanel(); });
+    byId("restoreFab").addEventListener("click",function(){ if(document.body.classList.contains("panel-collapsed")) togglePanel(); });
     (function(){ var hnd=el.sheet.querySelector(".sheet__handle"); if(hnd) hnd.addEventListener("click",function(){ if(window.innerWidth<900) togglePanel(); }); })();
     loadTheme().then(function(v){ setTheme(v==="dark"?"dark":"light"); });
     byId("pcClose").addEventListener("click",function(){ byId("poiModal").hidden=true; restoreMapView(); });
