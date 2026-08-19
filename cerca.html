@@ -668,11 +668,25 @@
     }
     function locate(){
       if(!("geolocation" in navigator)){ showNotice("Este dispositivo no ofrece ubicación. Toca el mapa para marcar tu punto de partida.","warn"); return; }
+      if(window.isSecureContext===false){ showNotice("La ubicación necesita una conexión segura (https). Toca el mapa para marcar tu punto de partida.","warn"); return; }
       clearNotice(); el.locateBtn.classList.add("busy");
-      navigator.geolocation.getCurrentPosition(
-        function(pos){ var c=pos.coords; setOrigin(c.latitude,c.longitude,"gps",c.accuracy); centerOn(c.latitude,c.longitude,14); el.locateBtn.classList.remove("busy"); },
-        function(err){ el.locateBtn.classList.remove("busy"); var m="No se ha podido acceder al GPS aquí. Toca el mapa para marcar tu punto de partida."; if(err&&err.code===1) m="Permiso de ubicación denegado. Toca el mapa para marcar, o activa el permiso en tu navegador."; showNotice(m,"warn"); },
-        { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
+      function ok(pos){ var c=pos.coords; setOrigin(c.latitude,c.longitude,"gps",c.accuracy); centerOn(c.latitude,c.longitude,14); el.locateBtn.classList.remove("busy"); }
+      function giveUp(err){
+        el.locateBtn.classList.remove("busy");
+        var m="No se ha podido obtener tu ubicación. Toca el mapa para marcar tu punto de partida.";
+        if(err&&err.code===1) m="Permiso de ubicación denegado. Toca el mapa para marcar, o activa el permiso en tu navegador.";
+        else if(err&&err.code===2) m="Tu equipo no ha podido determinar dónde estás (habitual en PC sin GPS ni wifi). Busca tu ciudad arriba o toca el mapa.";
+        else if(err&&err.code===3) m="La ubicación ha tardado demasiado. Busca tu ciudad en el buscador o toca el mapa para marcar el punto.";
+        showNotice(m,"warn");
+      }
+      /* 1er intento: alta precisión (GPS del móvil). Si falla por no haber señal o
+         agotarse el tiempo —lo habitual en un PC de sobremesa— se reintenta en modo
+         aproximado, que usa wifi/IP y sí suele funcionar ahí. */
+      navigator.geolocation.getCurrentPosition(ok, function(err){
+        if(err&&err.code===1){ giveUp(err); return; }
+        showNotice("Buscando tu ubicación aproximada…","info");
+        navigator.geolocation.getCurrentPosition(ok, giveUp, { enableHighAccuracy:false, timeout:15000, maximumAge:600000 });
+      }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
     }
 
     /* ---------- Área ---------- */
