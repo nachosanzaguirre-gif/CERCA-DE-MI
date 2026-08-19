@@ -145,7 +145,7 @@
   .fck b{ margin-left:auto; color:var(--ink-soft); font-weight:700; }
   .surprise{ flex:0 0 auto; width:100%; margin-bottom:12px; padding:12px; border:none; border-radius:12px; background:linear-gradient(100deg,var(--sun-1),var(--sun-2) 55%,var(--sun-3)); color:#fff; font-family:var(--font-body); font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(255,77,141,.6); }
   .surprise:active{ transform:translateY(1px); }
-  .planner{ margin-bottom:12px; }
+  .planner{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
   .planner .surprise{ margin-bottom:8px; }
   .planner__row{ display:flex; align-items:center; justify-content:space-between; padding:0 2px 4px; }
   .planner__label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
@@ -314,9 +314,9 @@
   /* Acceso directo al mapa: flota sobre el panel, siempre visible aunque hayas hecho scroll */
   .map-fab{ display:none; position:fixed; z-index:620; align-items:center; gap:7px; padding:10px 16px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 18px rgba(23,22,53,.4); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; }
   .map-fab svg{ width:16px; height:16px; }
-  .map-fab:active{ transform:scale(.96); }
+  .map-fab:active{ transform:translateX(-50%) scale(.96); }
   @media (max-width:899px){
-    .map-fab{ display:inline-flex; right:16px; bottom:calc(var(--sheet-h,240px) + 72px); transition:bottom .28s ease, opacity .2s ease; }
+    .map-fab{ display:inline-flex; left:50%; transform:translateX(-50%); bottom:calc(var(--sheet-h,240px) + 10px); transition:bottom .28s ease, opacity .2s ease; }
     body.panel-collapsed .map-fab{ opacity:0; pointer-events:none; }
   }
   /* Botón flotante para restaurar el panel cuando está minimizado */
@@ -442,13 +442,13 @@
       </div>
 
       <div class="view" id="viewPlaces">
+        <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
+        <div class="list" id="list"></div>
         <div class="planner">
           <button class="surprise" id="surpriseBtn" type="button">✨ Planifica mi visita</button>
           <div class="planner__row"><label class="planner__label" for="fitsRangeTop">Tiempo disponible</label><span class="planner__val" id="fitsBudgetValTop">3 h</span></div>
           <input class="range" id="fitsRangeTop" type="range" min="30" max="480" step="15" value="180" aria-label="Tiempo disponible para la visita" />
         </div>
-        <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
-        <div class="list" id="list"></div>
       </div>
 
       <div class="view" id="viewTrip" hidden>
@@ -1228,15 +1228,35 @@
     function surprise(){
       if(!pois.length){ showNotice("Primero busca sitios (pulsa «Buscar sitios»).","warn"); return; }
       var pool=pois.filter(passesFilters);
-      if(!pool.length){ showNotice("No hay sitios en las categorías activas.","warn"); return; }
+      if(!pool.length && !trip.length){ showNotice("No hay sitios en las categorías activas.","warn"); return; }
       var budget=fitsBudgetMin;
-      pool=pool.slice().sort(function(a,b){ var na=isNotable(a)?1:0, nb=isNotable(b)?1:0; if(nb!==na) return nb-na; return a.dist-b.dist; });
-      var chosen=[], perCat={};
       function fits(arr){ var seq=[{ lat:origin.lat, lng:origin.lng }].concat(nearestNeighbor({ lat:origin.lat, lng:origin.lng },arr)).concat(destination?[{ lat:destination.lat, lng:destination.lng }]:[]); var vis=0; arr.forEach(function(p){ vis+=CATS[p.cat].visit; }); return vis+estTravelMin(seq)<=budget; }
-      for(var i=0;i<pool.length && chosen.length<12;i++){ var p=pool[i]; if((perCat[p.cat]||0)>=3) continue; var trial=chosen.concat([p]); if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; } }
+
+      /* Los sitios que el usuario ya ha elegido mandan: se intentan colocar TODOS primero,
+         en su orden, y solo se descartan los que no quepan en el tiempo disponible. */
+      var preSel=trip.slice(), chosen=[], excluidos=[], perCat={};
+      preSel.forEach(function(p){
+        var trial=chosen.concat([p]);
+        if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; }
+        else excluidos.push(p);
+      });
+
+      /* Solo si sobra tiempo se rellena con sugerencias (sin repetir lo ya elegido). */
+      var yaDentro={}; chosen.forEach(function(p){ yaDentro[p.id]=1; }); excluidos.forEach(function(p){ yaDentro[p.id]=1; });
+      var resto=pool.filter(function(p){ return !yaDentro[p.id]; })
+        .sort(function(a,b){ var na=isNotable(a)?1:0, nb=isNotable(b)?1:0; if(nb!==na) return nb-na; return a.dist-b.dist; });
+      var añadidos=0;
+      for(var i=0;i<resto.length && chosen.length<12;i++){ var p=resto[i]; if((perCat[p.cat]||0)>=3) continue; var trial=chosen.concat([p]); if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; añadidos++; } }
+
       if(!chosen.length){ showNotice("No cabe ningún sitio en "+fmtHM(budget)+". Amplía el tiempo disponible justo debajo del botón.","warn"); return; }
       trip=chosen; updateCounts(); generateRoute(); setTab("trip");
-      showNotice("✨ Itinerario para "+fmtHM(budget)+": "+chosen.length+" paradas, con tiempo de visita y desplazamiento incluidos. Ajusta el tiempo disponible y vuelve a pulsar para recalcular.","ok");
+      var msg="✨ Itinerario para "+fmtHM(budget)+": "+chosen.length+" paradas";
+      if(preSel.length && !excluidos.length) msg+=" (tus "+preSel.length+" elegidas"+(añadidos?" + "+añadidos+" sugeridas":"")+")";
+      else if(añadidos) msg+=" (incluye "+añadidos+" sugeridas)";
+      msg+=", con visitas y desplazamientos incluidos.";
+      if(excluidos.length){
+        showNotice("No caben "+excluidos.length+" de tus "+preSel.length+" sitios en "+fmtHM(budget)+": "+excluidos.map(function(p){ return p.name; }).slice(0,3).join(", ")+(excluidos.length>3?"…":"")+". Amplía el tiempo disponible y vuelve a pulsar.","warn");
+      } else showNotice(msg,"ok");
     }
 
     /* ---------- Último origen (recordar por defecto) ---------- */
