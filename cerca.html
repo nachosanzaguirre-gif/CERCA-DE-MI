@@ -312,11 +312,11 @@
   /* Botón "ver mapa completo" dentro del panel (solo móvil) */
   .sheet__minimize{ display:none; }
   /* Acceso directo al mapa: flota sobre el panel, siempre visible aunque hayas hecho scroll */
-  .map-fab{ display:none; position:fixed; z-index:620; align-items:center; gap:7px; padding:10px 16px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 18px rgba(23,22,53,.4); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; }
+  .map-fab{ display:none; position:fixed; z-index:620; left:50%; transform:translateX(-50%); bottom:calc(var(--sheet-h,240px) + 10px); align-items:center; gap:7px; padding:10px 16px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 18px rgba(23,22,53,.4); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; transition:bottom .28s ease, opacity .2s ease; }
   .map-fab svg{ width:16px; height:16px; }
   .map-fab:active{ transform:translateX(-50%) scale(.96); }
   @media (max-width:899px){
-    .map-fab{ display:inline-flex; left:50%; transform:translateX(-50%); bottom:calc(var(--sheet-h,240px) + 10px); transition:bottom .28s ease, opacity .2s ease; }
+    .map-fab{ display:inline-flex; }
     body.panel-collapsed .map-fab{ opacity:0; pointer-events:none; }
   }
   /* Botón flotante para restaurar el panel cuando está minimizado */
@@ -445,7 +445,7 @@
         <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
         <div class="list" id="list"></div>
         <div class="planner">
-          <button class="surprise" id="surpriseBtn" type="button">✨ Planifica mi visita</button>
+          <button class="surprise" id="surpriseBtn" type="button">✨ Planifica mi visita <span style="opacity:.65;font-weight:600;font-size:11px">v9</span></button>
           <div class="planner__row"><label class="planner__label" for="fitsRangeTop">Tiempo disponible</label><span class="planner__val" id="fitsBudgetValTop">3 h</span></div>
           <input class="range" id="fitsRangeTop" type="range" min="30" max="480" step="15" value="180" aria-label="Tiempo disponible para la visita" />
         </div>
@@ -1144,7 +1144,7 @@
 
     /* ---------- Tiempo disponible: ¿cabe la ruta? (estimación local) ---------- */
     /* Trayecto = distancia en recta / velocidad, x1.3 (factor de rodeo recto→carretera) */
-    function fmtHM(m){ var h=Math.floor(m/60), mm=m%60, s=""; if(h) s+=h+" h"; if(mm||!h) s+=(h?" ":"")+mm+" min"; return s; }
+    function fmtHM(m){ m=Math.round(m||0); var h=Math.floor(m/60), mm=m%60, s=""; if(h) s+=h+" h"; if(mm||!h) s+=(h?" ":"")+mm+" min"; return s; }
     function estTravelMin(route){ var tr=0; for(var i=0;i<route.length-1;i++){ tr+=haversine(route[i].lat,route[i].lng,route[i+1].lat,route[i+1].lng); } return (tr/1000)/SPEED_KMH[mode]*60*1.3; }
     function tripEstimate(){ var route=(routeReady&&lastRoute)?lastRoute:[{ lat:origin.lat, lng:origin.lng }].concat(trip).concat(destination?[{ lat:destination.lat, lng:destination.lng }]:[]); var visitMin=0; trip.forEach(function(p){ visitMin+=CATS[p.cat].visit; }); var travelMin=estTravelMin(route); return { visitMin:Math.round(visitMin), travelMin:Math.round(travelMin), totalMin:Math.round(visitMin+travelMin) }; }
     function suggestDrops(budget){ var mids=trip.slice(), dropped=[];
@@ -1226,37 +1226,39 @@
     function passesFilters(p){ if(!activeCats.has(p.cat)) return false; if(advFilters.notable&&!isNotable(p)) return false; if(advFilters.accessible&&!isAccessible(p)) return false; if(advFilters.free&&!isFree(p)) return false; if(advFilters.open&&isOpenNow(p)!==true) return false; if(advFilters.fav&&!isFav(p.id)) return false; if(advFilters.unseen&&isSeen(p.id)) return false; return true; }
     function sortShown(arr){ var a=arr.slice(); if(sortMode==="name") a.sort(function(x,y){ return String(x.name).localeCompare(String(y.name)); }); else if(sortMode==="notable") a.sort(function(x,y){ var nx=isNotable(x)?1:0, ny=isNotable(y)?1:0; if(ny!==nx) return ny-nx; return x.dist-y.dist; }); else a.sort(function(x,y){ return x.dist-y.dist; }); return a; }
     function surprise(){
-      if(!pois.length){ showNotice("Primero busca sitios (pulsa «Buscar sitios»).","warn"); return; }
+      if(!pois.length && !trip.length){ showNotice("Primero busca sitios (pulsa «Buscar sitios»).","warn"); return; }
       var pool=pois.filter(passesFilters);
       if(!pool.length && !trip.length){ showNotice("No hay sitios en las categorías activas.","warn"); return; }
       var budget=fitsBudgetMin;
       function fits(arr){ var seq=[{ lat:origin.lat, lng:origin.lng }].concat(nearestNeighbor({ lat:origin.lat, lng:origin.lng },arr)).concat(destination?[{ lat:destination.lat, lng:destination.lng }]:[]); var vis=0; arr.forEach(function(p){ vis+=CATS[p.cat].visit; }); return vis+estTravelMin(seq)<=budget; }
 
-      /* Los sitios que el usuario ya ha elegido mandan: se intentan colocar TODOS primero,
-         en su orden, y solo se descartan los que no quepan en el tiempo disponible. */
-      var preSel=trip.slice(), chosen=[], excluidos=[], perCat={};
-      preSel.forEach(function(p){
-        var trial=chosen.concat([p]);
-        if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; }
-        else excluidos.push(p);
-      });
+      /* REGLA: lo que el usuario ha elegido NUNCA se descarta. El tiempo disponible
+         solo sirve para (a) decidir cuántas sugerencias añadir y (b) avisar si la
+         ruta se pasa del presupuesto. Quitar paradas es decisión suya, no de la app. */
+      var chosen=trip.slice(), perCat={};
+      chosen.forEach(function(p){ perCat[p.cat]=(perCat[p.cat]||0)+1; });
 
-      /* Solo si sobra tiempo se rellena con sugerencias (sin repetir lo ya elegido). */
-      var yaDentro={}; chosen.forEach(function(p){ yaDentro[p.id]=1; }); excluidos.forEach(function(p){ yaDentro[p.id]=1; });
+      /* Solo se rellena con sugerencias si aún cabe algo en el tiempo disponible. */
+      var yaDentro={}; chosen.forEach(function(p){ yaDentro[p.id]=1; });
       var resto=pool.filter(function(p){ return !yaDentro[p.id]; })
         .sort(function(a,b){ var na=isNotable(a)?1:0, nb=isNotable(b)?1:0; if(nb!==na) return nb-na; return a.dist-b.dist; });
       var añadidos=0;
       for(var i=0;i<resto.length && chosen.length<12;i++){ var p=resto[i]; if((perCat[p.cat]||0)>=3) continue; var trial=chosen.concat([p]); if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; añadidos++; } }
 
       if(!chosen.length){ showNotice("No cabe ningún sitio en "+fmtHM(budget)+". Amplía el tiempo disponible justo debajo del botón.","warn"); return; }
+      var preSel=trip.length;
       trip=chosen; updateCounts(); generateRoute(); setTab("trip");
-      var msg="✨ Itinerario para "+fmtHM(budget)+": "+chosen.length+" paradas";
-      if(preSel.length && !excluidos.length) msg+=" (tus "+preSel.length+" elegidas"+(añadidos?" + "+añadidos+" sugeridas":"")+")";
-      else if(añadidos) msg+=" (incluye "+añadidos+" sugeridas)";
-      msg+=", con visitas y desplazamientos incluidos.";
-      if(excluidos.length){
-        showNotice("No caben "+excluidos.length+" de tus "+preSel.length+" sitios en "+fmtHM(budget)+": "+excluidos.map(function(p){ return p.name; }).slice(0,3).join(", ")+(excluidos.length>3?"…":"")+". Amplía el tiempo disponible y vuelve a pulsar.","warn");
-      } else showNotice(msg,"ok");
+
+      /* ¿Se pasa del presupuesto? Se informa, pero la ruta se genera igualmente. */
+      var seq=[{lat:origin.lat,lng:origin.lng}].concat(chosen).concat(destination?[{lat:destination.lat,lng:destination.lng}]:[]);
+      var totalVis=0; chosen.forEach(function(p){ totalVis+=CATS[p.cat].visit; });
+      var total=totalVis+estTravelMin(seq);
+      var msg="✨ Ruta con "+chosen.length+" paradas";
+      if(preSel && añadidos) msg+=" (tus "+preSel+" + "+añadidos+" sugeridas)";
+      else if(añadidos) msg+=" (sugeridas por Cerca)";
+      else if(preSel) msg+=" (todas las que elegiste)";
+      if(total>budget) showNotice(msg+". Necesita ~"+fmtHM(total)+", más de las "+fmtHM(budget)+" que tienes: amplía el tiempo o quita alguna parada.","warn");
+      else showNotice(msg+" · ~"+fmtHM(total)+" de las "+fmtHM(budget)+" disponibles.","ok");
     }
 
     /* ---------- Último origen (recordar por defecto) ---------- */
@@ -1272,7 +1274,7 @@
       el.originBox.classList.remove("is-set"); el.originLabel.textContent="Punto de partida"; el.originCoords.innerHTML='<span class="muted">Toca el mapa o pulsa GPS →</span>';
       el.reachBtn.disabled=true; el.recenter.classList.remove("is-on"); byId("weather").hidden=true;
       renderChips(); updateCounts();
-      saveOrigin(null); document.body.classList.remove("panel-collapsed");
+      saveOrigin(null); clearSession(); document.body.classList.remove("panel-collapsed");
       try{ map.setView([40.2,-3.5],6); }catch(e){} clearNotice(); syncSheetHeight(); try{ map.invalidateSize(); }catch(e){}
     }
 
@@ -1385,9 +1387,67 @@
     byId("isoToggle").addEventListener("change",function(){ useRealIso=byId("isoToggle").checked; });
     document.addEventListener("click",function(e){ var t=e.target; if(!t||!t.closest) return; var a=t.closest('a[target="_blank"]'); if(a){ var href=a.getAttribute("href")||""; if(/^https?:/i.test(href)){ e.preventDefault(); window.open(a.href,"_blank","noopener"); } } });
     loadMarks().then(function(m){ if(m&&typeof m==="object"){ marks={ fav:m.fav||{}, seen:m.seen||{} }; if(pois.length) renderList(); } });
+    /* ---------- Sesión: sobrevivir a que el móvil descarte la app en segundo plano ----------
+       Android/iOS pueden descartar la página al minimizar; al volver se recargaría de cero.
+       Guardamos lo imprescindible al perder el foco y lo restauramos al arrancar. */
+    function saveSession(){
+      if(!origin||!pois.length) return;
+      try{
+        var data={ t:Date.now(), origin:origin, mode:mode, minutes:+el.timeRange.value, budget:fitsBudgetMin,
+          searchMode:searchMode, destination:destination||null,
+          cats:Array.from(activeCats), adv:advFilters, sort:sortMode,
+          pois:pois.map(function(p){ return { id:p.id,name:p.name,cat:p.cat,lat:p.lat,lng:p.lng,dist:p.dist,tags:p.tags }; }),
+          trip:trip.map(function(p){ return p.id; }) };
+        var val=JSON.stringify(data);
+        if(val.length>2000000) return; /* demasiado grande: no merece la pena */
+        if(artifactStore) window.storage.set("cfg:session",val,false).catch(function(){});
+        else if(useLocal) window.localStorage.setItem("cfg:session",val);
+      }catch(e){}
+    }
+    function loadSession(){
+      try{
+        if(artifactStore) return window.storage.get("cfg:session",false).then(function(r){ return r&&r.value?JSON.parse(r.value):null; }).catch(function(){ return null; });
+        if(useLocal){ var s=window.localStorage.getItem("cfg:session"); return Promise.resolve(s?JSON.parse(s):null); }
+      }catch(e){}
+      return Promise.resolve(null);
+    }
+    function clearSession(){ try{ if(artifactStore) window.storage["delete"]("cfg:session",false).catch(function(){}); else if(useLocal) window.localStorage.removeItem("cfg:session"); }catch(e){} }
+    function restoreSession(d){
+      if(!d||!d.origin||!d.pois||!d.pois.length) return false;
+      if(Date.now()-(d.t||0) > 6*3600*1000){ clearSession(); return false; } /* caducada: más de 6 h */
+      try{
+        mode=d.mode||"walk"; setModeUI();
+        if(d.minutes){ el.timeRange.value=d.minutes; el.timeVal.innerHTML=d.minutes+' <small>min</small>'; }
+        if(d.budget){ fitsBudgetMin=d.budget; syncBudgetUI(); }
+        if(d.searchMode) setSearchMode(d.searchMode);
+        setOrigin(d.origin.lat,d.origin.lng,d.origin.source||"marked",undefined,d.origin.placeName||null);
+        if(d.destination) setDestination(d.destination.lat,d.destination.lng);
+        activeCats=new Set(d.cats||[]);
+        if(d.adv) advFilters=d.adv;
+        if(d.sort){ sortMode=d.sort; var ss=byId("sortSel"); if(ss) ss.value=d.sort; }
+        try{ Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.checked=!!advFilters[cb.getAttribute("data-adv")]; }); }catch(e){}
+        pois=d.pois;
+        buildReach();
+        var byId2={}; pois.forEach(function(p){ byId2[p.id]=p; });
+        trip=(d.trip||[]).map(function(id){ return byId2[id]; }).filter(Boolean);
+        updateCounts(); renderChips(); renderMarkers(); renderList(); renderTrip();
+        centerOn(d.origin.lat,d.origin.lng,14);
+        showNotice("Se ha recuperado tu búsqueda anterior ("+pois.length+" sitios"+(trip.length?", "+trip.length+" en tu ruta":"")+").","ok");
+        return true;
+      }catch(e){ clearSession(); return false; }
+    }
+    document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") saveSession(); });
+    window.addEventListener("pagehide",saveSession);
+
     var sharedLoaded=tryLoadSharedRoute();
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
-    loadOrigin().then(function(o){ if(sharedLoaded) return; if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked",undefined,o.placeName||null); centerOn(o.lat,o.lng,14); } });
+    loadOrigin().then(function(o){
+      if(sharedLoaded) return;
+      return loadSession().then(function(sess){
+        if(restoreSession(sess)) return;
+        if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked",undefined,o.placeName||null); centerOn(o.lat,o.lng,14); }
+      });
+    });
     renderChips();
     byId("themeFab").addEventListener("click",toggleTheme);
     byId("resetFab").addEventListener("click",function(){ if(trip.length && !window.confirm("¿Reiniciar la app? Se borrará tu ruta actual ("+trip.length+" parada"+(trip.length===1?"":"s")+").")) return; resetApp(); });

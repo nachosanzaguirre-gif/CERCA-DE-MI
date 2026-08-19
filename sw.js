@@ -6,7 +6,7 @@
    IMPORTANTE al publicar una versión nueva: sube el número de CACHE (v8 -> v9...).
    Es lo que hace que los navegadores que ya tienen la app instalada descarten
    la versión vieja y se queden con la nueva. */
-const CACHE = "cerca-v8";
+const CACHE = "cerca-v9";
 const ASSETS = ["./cerca.html", "./manifest.webmanifest", "./icon192.png", "./icon512.png"];
 
 self.addEventListener("install", function (e) {
