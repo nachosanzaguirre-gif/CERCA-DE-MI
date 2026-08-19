@@ -311,6 +311,14 @@
   .topbar{ transition:opacity .2s ease; }
   /* Botón "ver mapa completo" dentro del panel (solo móvil) */
   .sheet__minimize{ display:none; }
+  /* Acceso directo al mapa: flota sobre el panel, siempre visible aunque hayas hecho scroll */
+  .map-fab{ display:none; position:fixed; z-index:620; align-items:center; gap:7px; padding:10px 16px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 18px rgba(23,22,53,.4); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; }
+  .map-fab svg{ width:16px; height:16px; }
+  .map-fab:active{ transform:scale(.96); }
+  @media (max-width:899px){
+    .map-fab{ display:inline-flex; right:16px; bottom:calc(var(--sheet-h,240px) + 72px); transition:bottom .28s ease, opacity .2s ease; }
+    body.panel-collapsed .map-fab{ opacity:0; pointer-events:none; }
+  }
   /* Botón flotante para restaurar el panel cuando está minimizado */
   .restore-fab{ display:none; position:fixed; z-index:600; left:50%; transform:translateX(-50%); bottom:max(18px,env(safe-area-inset-bottom)); align-items:center; gap:8px; padding:12px 20px; background:var(--ink); color:var(--paper); border:none; border-radius:999px; box-shadow:0 6px 20px rgba(23,22,53,.35); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; }
   .restore-fab svg{ width:18px; height:18px; }
@@ -482,6 +490,7 @@
     <button class="sheet__minimize" id="minimizeBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4a1 1 0 0 1-1 1H3"/><path d="M16 3v4a1 1 0 0 0 1 1h4"/><path d="M8 21v-4a1 1 0 0 0-1-1H3"/><path d="M16 21v-4a1 1 0 0 1 1-1h4"/></svg> Ver mapa completo</button>
   </section>
 
+  <button class="map-fab" id="mapFab" type="button" aria-label="Ver el mapa completo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4a1 1 0 0 1-1 1H3"/><path d="M16 3v4a1 1 0 0 0 1 1h4"/><path d="M8 21v-4a1 1 0 0 0-1-1H3"/><path d="M16 21v-4a1 1 0 0 1 1-1h4"/></svg> Ver mapa</button>
   <button class="restore-fab" id="restoreFab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg> Mostrar panel</button>
 
   <div class="modal" id="savedModal" hidden>
@@ -1363,6 +1372,7 @@
     byId("themeFab").addEventListener("click",toggleTheme);
     byId("resetFab").addEventListener("click",function(){ if(trip.length && !window.confirm("¿Reiniciar la app? Se borrará tu ruta actual ("+trip.length+" parada"+(trip.length===1?"":"s")+").")) return; resetApp(); });
     byId("panelToggle").addEventListener("click",togglePanel);
+    byId("mapFab").addEventListener("click",function(){ if(!document.body.classList.contains("panel-collapsed")) togglePanel(); });
     byId("minimizeBtn").addEventListener("click",function(){ if(!document.body.classList.contains("panel-collapsed")) togglePanel(); });
     byId("restoreFab").addEventListener("click",function(){ if(document.body.classList.contains("panel-collapsed")) togglePanel(); });
     (function(){ var hnd=el.sheet.querySelector(".sheet__handle"); if(hnd) hnd.addEventListener("click",function(){ if(window.innerWidth<900) togglePanel(); }); })();
