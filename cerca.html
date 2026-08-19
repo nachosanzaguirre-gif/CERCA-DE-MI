@@ -145,6 +145,11 @@
   .fck b{ margin-left:auto; color:var(--ink-soft); font-weight:700; }
   .surprise{ flex:0 0 auto; width:100%; margin-bottom:12px; padding:12px; border:none; border-radius:12px; background:linear-gradient(100deg,var(--sun-1),var(--sun-2) 55%,var(--sun-3)); color:#fff; font-family:var(--font-body); font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(255,77,141,.6); }
   .surprise:active{ transform:translateY(1px); }
+  .planner{ margin-bottom:12px; }
+  .planner .surprise{ margin-bottom:8px; }
+  .planner__row{ display:flex; align-items:center; justify-content:space-between; padding:0 2px 4px; }
+  .planner__label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+  .planner__val{ font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--ink); }
   .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:999px; font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--ink-soft); background:var(--mist); border:1px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .15s ease; }
   .chip.is-on{ color:#fff; background:var(--c,#888); border-color:transparent; } .chip b{ font-weight:800; opacity:.9; }
   .chip__dot{ width:9px; height:9px; border-radius:50%; background:var(--c,#888); } .chip.is-on .chip__dot{ background:#fff; }
@@ -157,6 +162,24 @@
   .poi{ display:flex; align-items:flex-start; gap:11px; padding:12px 4px; border-bottom:1px solid var(--line); }
   .poi:last-child{ border-bottom:none; } .poi:hover{ background:#fafbff; }
   .poi__dot{ width:14px; height:14px; flex:0 0 14px; border-radius:50%; margin-top:3px; box-shadow:0 0 0 3px rgba(0,0,0,.04); }
+  .poi__thumb{ position:relative; flex:0 0 52px; width:52px; height:52px; border-radius:10px; overflow:hidden; background:var(--mist); margin-top:1px; }
+  .poi__thumb img{ width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .25s ease; }
+  .poi__thumb img.is-loaded{ opacity:1; }
+  .poi__thumb .poi__thumbDot{ position:absolute; left:50%; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; }
+  .poi__thumb img.is-loaded ~ .poi__thumbDot{ display:none; }
+  .poi__fav{ color:var(--sun-2); margin-right:4px; }
+  .poi__seen{ color:var(--go-deep); font-weight:700; }
+  .poi.is-seen .poi__name{ opacity:.6; }
+  .poi.is-seen .poi__thumb img{ filter:grayscale(.7); }
+  .pc__marks{ display:flex; gap:8px; margin-top:8px; }
+  .backup{ border-top:1px solid var(--line); margin-top:12px; padding-top:12px; }
+  .backup__head{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .backup__note{ font-size:12.5px; color:var(--ink-soft); line-height:1.4; margin:0 0 10px; }
+  .backup__row{ display:flex; gap:8px; }
+  .backup__row .btn2{ flex:1; margin:0; }
+  .markbtn{ flex:1; padding:10px; border-radius:11px; border:1.5px solid var(--line); background:var(--paper); color:var(--ink-soft); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s ease; }
+  .markbtn.is-on{ border-color:var(--sun-2); color:var(--sun-2); background:rgba(255,77,141,.08); }
+  #pcSeen.is-on{ border-color:var(--go-deep); color:var(--go-deep); background:rgba(6,182,212,.1); }
   .poi__body{ min-width:0; flex:1; cursor:pointer; }
   .poi__name{ font-weight:700; font-size:15px; color:var(--ink); line-height:1.25; }
   .poi__meta{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; } .poi__meta .poi__dist{ font-family:var(--font-mono); }
@@ -173,7 +196,14 @@
   .dest-row__txt b{ font-family:var(--font-body); display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); }
   .dest-row__rm{ border:none; background:transparent; color:var(--ink-soft); font-size:20px; cursor:pointer; }
   .trip-hint{ font-size:12px; color:var(--sun-2); margin:6px 2px 0; font-weight:600; }
-  .trip-empty{ flex:0 0 auto; text-align:center; color:var(--ink-soft); font-size:13.5px; padding:22px 10px; line-height:1.5; }
+  .trip-empty{ flex:0 0 auto; text-align:center; color:var(--ink-soft); font-size:13.5px; padding:18px 10px 10px; line-height:1.5; }
+  .trip-empty__title{ font-family:var(--font-display); font-size:17px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .trip-empty__lead{ margin:0 0 12px; font-size:13px; }
+  .trip-empty__list{ list-style:none; margin:0 0 14px; padding:0; text-align:left; display:flex; flex-direction:column; gap:8px; }
+  .trip-empty__list li{ position:relative; padding:9px 11px 9px 12px; background:var(--mist); border-radius:10px; font-size:12.5px; line-height:1.45; }
+  .trip-empty__list b{ color:var(--ink); }
+  .trip-empty__cta{ width:100%; padding:11px; border:none; border-radius:12px; background:linear-gradient(100deg,var(--sun-1),var(--sun-2) 55%,var(--sun-3)); color:#fff; font-family:var(--font-body); font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 8px 20px -8px rgba(255,77,141,.6); }
+  .trip-empty__cta:active{ transform:translateY(1px); }
   .triplist{ display:block; }
   .tripitem{ display:flex; align-items:flex-start; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); } .tripitem:last-child{ border-bottom:none; }
   .tripitem__num{ flex:0 0 28px; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; color:#fff; font-family:var(--font-display); font-weight:800; font-size:13px; margin-top:1px; }
@@ -378,6 +408,8 @@
           <label class="fck"><input type="checkbox" data-adv="accessible"><span>♿ Accesible</span></label>
           <label class="fck"><input type="checkbox" data-adv="free"><span>🆓 Gratis</span></label>
           <label class="fck"><input type="checkbox" data-adv="open"><span>🕒 Abierto ahora</span></label>
+          <label class="fck"><input type="checkbox" data-adv="fav"><span>★ Solo favoritos</span></label>
+          <label class="fck"><input type="checkbox" data-adv="unseen"><span>👁 Ocultar visitados</span></label>
         </div>
       </div>
     </details>
@@ -402,19 +434,32 @@
       </div>
 
       <div class="view" id="viewPlaces">
-        <button class="surprise" id="surpriseBtn" type="button">✨ Sorpréndeme</button>
+        <div class="planner">
+          <button class="surprise" id="surpriseBtn" type="button">✨ Planifica mi visita</button>
+          <div class="planner__row"><label class="planner__label" for="fitsRangeTop">Tiempo disponible</label><span class="planner__val" id="fitsBudgetValTop">3 h</span></div>
+          <input class="range" id="fitsRangeTop" type="range" min="30" max="480" step="15" value="180" aria-label="Tiempo disponible para la visita" />
+        </div>
         <div class="sortbar"><label class="sortbar__label" for="sortSel">Ordenar</label><select class="sortbar__sel" id="sortSel"><option value="dist">Distancia</option><option value="notable">Destacados</option><option value="name">Nombre (A–Z)</option></select></div>
         <div class="list" id="list"></div>
       </div>
 
       <div class="view" id="viewTrip" hidden>
         <div class="trip-ctl" id="tripCtl"></div>
-        <div class="trip-empty" id="tripEmpty">Aún no has añadido sitios.<br>Ve a «Sitios» y pulsa + en los que quieras visitar.</div>
+        <div class="trip-empty" id="tripEmpty">
+          <div class="trip-empty__title">Monta tu ruta del día</div>
+          <p class="trip-empty__lead">Añade sitios desde «Sitios» con el botón <b>+</b>, o deja que Cerca te proponga un plan.</p>
+          <ul class="trip-empty__list">
+            <li><b>Orden óptimo:</b> calcula el recorrido más corto entre tus paradas.</li>
+            <li><b>¿Te da tiempo?:</b> suma visitas y desplazamientos, y avisa si no cabe.</li>
+            <li><b>Guarda y comparte:</b> por enlace, texto o imagen, y ábrela en Google Maps.</li>
+          </ul>
+          <button class="trip-empty__cta" id="tripEmptyPlan" type="button">✨ Planifica mi visita por mí</button>
+        </div>
         <div class="triplist" id="tripList"></div>
         <div class="trip-foot" id="tripFoot" hidden>
           <div class="trip-totals" id="tripTotals"></div>
           <div class="fits" id="fitsPanel" hidden>
-            <div class="fits__head"><span class="fits__label">¿Me da tiempo?</span><span class="fits__budget" id="fitsBudgetVal">3 h</span></div>
+            <div class="fits__head"><span class="fits__label">Tiempo disponible</span><span class="fits__budget" id="fitsBudgetVal">3 h</span></div>
             <input class="range" id="fitsRange" type="range" min="30" max="480" step="15" value="180" aria-label="Tiempo disponible" />
             <div class="fits-verdict" id="fitsVerdict"></div>
           </div>
@@ -444,6 +489,15 @@
     <div class="modal__card">
       <div class="modal__head"><span class="modal__title">Rutas guardadas</span><button class="modal__close" id="savedClose" aria-label="Cerrar">×</button></div>
       <div class="modal__list" id="savedList"></div>
+      <div class="backup">
+        <div class="backup__head">Copia de seguridad</div>
+        <p class="backup__note">Guarda tus rutas, favoritos y sitios visitados en un archivo. Útil antes de cambiar de móvil o si borras los datos del navegador.</p>
+        <div class="backup__row">
+          <button class="btn2" id="exportBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg> Exportar</button>
+          <button class="btn2" id="importBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg> Importar</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+      </div>
     </div>
   </div>
 
@@ -461,6 +515,7 @@
         <button class="pc__readmore" id="pcReadMore" type="button" hidden>Leer más ▾</button>
         <div class="pc__gallery" id="pcGallery" hidden></div>
         <button class="cta pc__add" id="pcAdd" type="button">+ Añadir a la ruta</button>
+        <div class="pc__marks"><button class="markbtn" id="pcFav" type="button">☆ Favorito</button><button class="markbtn" id="pcSeen" type="button">○ Marcar visitado</button></div>
         <div class="pc__links">
           <button class="btn3" id="pcMap" type="button">Ver en el mapa</button>
           <a class="btn3" id="pcMaps" href="#" target="_blank" rel="noopener">Cómo llegar</a>
@@ -502,7 +557,7 @@
     var activeTab="places", searchMode="near", currentCardPoi=null, fitsBudgetMin=180;
     var cardArticle=null, cardSummary="", cardFull=null, cardImgs=null, cardExpanded=false;
     var weatherTimer=null;
-    var advFilters={ notable:false, accessible:false, free:false, open:false }, sortMode="dist";
+    var advFilters={ notable:false, accessible:false, free:false, open:false, fav:false, unseen:false }, sortMode="dist";
 
     var SPEED_KMH={ walk:4.5, car:50 }, DISPLAY_CAP=150;
     var reachStyle={ color:"#FF4D8D", weight:2, opacity:.9, fillColor:"#FF4D8D", fillOpacity:.10 };
@@ -598,13 +653,14 @@
     function wikiUrl(t){ if(t.wikipedia&&t.wikipedia.indexOf(":")>0){ var i=t.wikipedia.indexOf(":"); return "https://"+t.wikipedia.slice(0,i)+".wikipedia.org/wiki/"+encodeURIComponent(t.wikipedia.slice(i+1).replace(/ /g,"_")); } return null; }
 
     /* ---------- Origen ---------- */
-    function setOrigin(lat,lng,source,accuracy){
+    function setOrigin(lat,lng,source,accuracy,placeName){
       origin={ id:"origin", name:"Punto de partida", lat:lat, lng:lng, source:source };
+      if(placeName) origin.placeName=placeName;
       if(typeof accuracy==="number") origin.accuracy=accuracy;
       if(!beacon) beacon=L.marker([lat,lng],{ icon:beaconIcon, keyboard:false, interactive:false }).addTo(map);
       else beacon.setLatLng([lat,lng]);
       el.originBox.classList.add("is-set");
-      el.originLabel.textContent=source==="gps"?"Mi ubicación":(source==="search"?"Ubicación buscada":"Punto marcado");
+      el.originLabel.textContent=source==="gps"?"Mi ubicación":(source==="search"?(placeName||"Ubicación buscada"):"Punto marcado");
       var extra=(source==="gps"&&typeof accuracy==="number")?'  <span class="muted">±'+Math.round(accuracy)+' m</span>':"";
       el.originCoords.innerHTML=fmt(lat)+", "+fmt(lng)+extra;
       el.reachBtn.disabled=false; el.recenter.classList.add("is-on");
@@ -675,7 +731,7 @@
     function focusPoiOnMap(p){ highlightPoi(p); centerOn(p.lat,p.lng,Math.max(map.getZoom(),15)); }
     function openCardFor(p){ highlightPoi(p); saveMapView(); openPoiCard(p); }
     function renderMarkers(){ poiLayer.clearLayers(); selPoi=null; visiblePois().forEach(function(p){ var c=CATS[p.cat]; var mk=L.marker([p.lat,p.lng],{ icon:poiMarkIcon(c.color,false), keyboard:false }); mk.on("click",function(){ openCardFor(p); }); p._marker=mk; poiLayer.addLayer(mk); }); }
-    function updateFiltersCount(){ var n=0; ["notable","accessible","free","open"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
+    function updateFiltersCount(){ var n=0; ["notable","accessible","free","open","fav","unseen"].forEach(function(k){ if(advFilters[k]) n++; }); var present={}; pois.forEach(function(p){ present[p.cat]=1; }); Object.keys(present).forEach(function(k){ if(!activeCats.has(k)) n++; }); var b=byId("filtersCount"); if(b){ b.textContent=n>0?String(n):""; b.style.display=n>0?"inline-flex":"none"; } }
     var CAT_GROUPS={ museo:"Turismo y cultura",monumento:"Turismo y cultura",ruinas:"Turismo y cultura",iglesia:"Turismo y cultura",curiosidad:"Turismo y cultura",vistas:"Turismo y cultura",
       restaurante:"Comer y beber",cafeteria:"Comer y beber",heladeria:"Comer y beber",comidarapida:"Comer y beber",bares:"Comer y beber",
       naturaleza:"Naturaleza y ocio",recreo:"Naturaleza y ocio",parques:"Naturaleza y ocio",deporte:"Naturaleza y ocio",
@@ -698,17 +754,77 @@
           body.appendChild(lab); });
         det.appendChild(body); box.appendChild(det); });
       updateFiltersCount(); }
+    /* ---------- Miniaturas de la lista (carga diferida, solo sitios con Wikipedia) ---------- */
+    var thumbCache={}, thumbObserver=null, thumbActive=0, thumbQueue=[];
+    var THUMB_MAX_PARALLEL=4;
+    function thumbKey(p){ var t=p.tags||{}; return t.wikipedia||t.wikidata||null; }
+    function thumbPump(){ while(thumbActive<THUMB_MAX_PARALLEL && thumbQueue.length){ var job=thumbQueue.shift(); thumbActive++; job().then(function(){ thumbActive--; thumbPump(); },function(){ thumbActive--; thumbPump(); }); } }
+    function fetchThumb(p){ var k=thumbKey(p); if(!k) return Promise.resolve(null);
+      if(thumbCache[k]!==undefined) return Promise.resolve(thumbCache[k]);
+      return new Promise(function(resolve){
+        thumbQueue.push(function(){
+          if(thumbCache[k]!==undefined){ resolve(thumbCache[k]); return Promise.resolve(); }
+          return fetchPlaceInfo(p).then(function(info){ var src=(info&&info.image)||null; thumbCache[k]=src; resolve(src); })
+            .catch(function(){ thumbCache[k]=null; resolve(null); });
+        });
+        thumbPump();
+      }); }
+    function ensureThumbObserver(){
+      if(thumbObserver||typeof IntersectionObserver==="undefined") return thumbObserver;
+      thumbObserver=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if(!en.isIntersecting) return; var box=en.target; thumbObserver.unobserve(box);
+          var p=box.__poi; if(!p) return;
+          fetchThumb(p).then(function(src){ if(!src||!box.isConnected) return; var img=box.querySelector("img"); if(!img) return;
+            img.onload=function(){ img.classList.add("is-loaded"); }; img.src=src; }); });
+      },{ root:el.list, rootMargin:"120px" });
+      return thumbObserver; }
+    /* ---------- Favoritos y visitados ---------- */
+    var marks={ fav:{}, seen:{} };
+    function saveMarks(){ var k="cfg:marks", val=JSON.stringify(marks);
+      try{ if(artifactStore){ window.storage.set(k,val,false).catch(function(){}); } else if(useLocal){ window.localStorage.setItem(k,val); } }catch(e){} }
+    function loadMarks(){ var k="cfg:marks";
+      try{ if(artifactStore){ return window.storage.get(k,false).then(function(r){ return r&&r.value?JSON.parse(r.value):null; }).catch(function(){ return null; }); }
+        if(useLocal){ var s=window.localStorage.getItem(k); return Promise.resolve(s?JSON.parse(s):null); } }catch(e){}
+      return Promise.resolve(null); }
+    function isFav(id){ return !!marks.fav[id]; }
+    function isSeen(id){ return !!marks.seen[id]; }
+    function toggleFav(p){ if(marks.fav[p.id]) delete marks.fav[p.id]; else marks.fav[p.id]={ n:p.name, lat:p.lat, lng:p.lng, cat:p.cat, t:Date.now() };
+      saveMarks(); refreshMarkUI(p); renderList(); updateCardMarkBtns(); }
+    function toggleSeen(p){ if(marks.seen[p.id]) delete marks.seen[p.id]; else marks.seen[p.id]={ n:p.name, t:Date.now() };
+      saveMarks(); refreshMarkUI(p); renderList(); updateCardMarkBtns(); }
+    function refreshMarkUI(p){ if(p&&p._row){ p._row.classList.toggle("is-fav",isFav(p.id)); p._row.classList.toggle("is-seen",isSeen(p.id)); } }
+    function updateCardMarkBtns(){ var p=currentCardPoi; if(!p) return;
+      var f=byId("pcFav"), s=byId("pcSeen");
+      if(f){ f.classList.toggle("is-on",isFav(p.id)); f.textContent=isFav(p.id)?"★ En favoritos":"☆ Favorito"; }
+      if(s){ s.classList.toggle("is-on",isSeen(p.id)); s.textContent=isSeen(p.id)?"✓ Visitado":"○ Marcar visitado"; } }
+
     function renderList(){ var shown=sortShown(visiblePois()); el.list.innerHTML="";
+      if(thumbObserver){ thumbObserver.disconnect(); thumbObserver=null; }
+      var obs=ensureThumbObserver();
+      var frag=document.createDocumentFragment(), pendingThumbs=[];
       shown.forEach(function(p){ var c=CATS[p.cat], wiki=wikiUrl(p.tags), notable=!!(p.tags&&(p.tags.wikipedia||p.tags.wikidata));
         var row=document.createElement("div"); row.className="poi";
         var body=document.createElement("div"); body.className="poi__body";
-        body.innerHTML='<div class="poi__name">'+(notable?'<span class="poi__star" title="Destacado">★</span>':'')+esc(p.name)+'</div><div class="poi__meta">'+c.label+' · <span class="poi__dist">'+fmtDist(p.dist)+'</span> · ~'+c.visit+' min'+(wiki?' · <a class="poi__wiki" href="'+wiki+'" target="_blank" rel="noopener">Wikipedia</a>':'')+'</div>';
+        body.innerHTML='<div class="poi__name">'+(isFav(p.id)?'<span class="poi__fav" title="Favorito">★</span>':'')+(notable?'<span class="poi__star" title="Destacado">★</span>':'')+esc(p.name)+'</div><div class="poi__meta">'+(isSeen(p.id)?'<span class="poi__seen">✓ Visitado</span> · ':'')+c.label+' · <span class="poi__dist">'+fmtDist(p.dist)+'</span> · ~'+c.visit+' min'+(wiki?' · <a class="poi__wiki" href="'+wiki+'" target="_blank" rel="noopener">Wikipedia</a>':'')+'</div>';
         body.addEventListener("click",function(ev){ if(ev.target.closest(".poi__wiki")) return; focusPoiOnMap(p); saveMapView(); openPoiCard(p); });
         var add=document.createElement("button"); add.type="button"; add.className="poi__add"+(inTrip(p.id)?" is-in":""); add.textContent=inTrip(p.id)?"✓":"+"; add.setAttribute("aria-label",inTrip(p.id)?"Quitar de mi ruta":"Añadir a mi ruta");
         add.addEventListener("click",function(){ toggleTrip(p); }); p._addBtn=add;
-        var dot=document.createElement("span"); dot.className="poi__dot"; dot.style.background=c.color;
+        var lead;
+        if(thumbKey(p)){
+          lead=document.createElement("div"); lead.className="poi__thumb"; lead.__poi=p;
+          lead.innerHTML='<img alt="" loading="lazy" decoding="async"><span class="poi__thumbDot" style="background:'+c.color+'"></span>';
+          var cached=thumbCache[thumbKey(p)];
+          if(cached){ var im=lead.querySelector("img"); im.onload=function(){ im.classList.add("is-loaded"); }; im.src=cached; }
+          else if(cached===undefined){ if(obs) pendingThumbs.push(lead); else fetchThumb(p).then(function(src){ if(!src) return; var im2=lead.querySelector("img"); im2.onload=function(){ im2.classList.add("is-loaded"); }; im2.src=src; }); }
+        } else {
+          lead=document.createElement("span"); lead.className="poi__dot"; lead.style.background=c.color;
+        }
         p._row=row; if(selPoi&&selPoi.id===p.id) row.classList.add("is-sel");
-        row.appendChild(dot); row.appendChild(body); row.appendChild(add); el.list.appendChild(row); });
+        if(isFav(p.id)) row.classList.add("is-fav");
+        if(isSeen(p.id)) row.classList.add("is-seen");
+        row.appendChild(lead); row.appendChild(body); row.appendChild(add); frag.appendChild(row); });
+      el.list.appendChild(frag);
+      if(obs) pendingThumbs.forEach(function(box){ obs.observe(box); });
       el.results.hidden=false; syncSheetHeight(); }
 
     /* ---------- Trip / ruta ---------- */
@@ -839,7 +955,43 @@
         Array.prototype.forEach.call(listEl.querySelectorAll(".saved-item__del"),function(b){ b.addEventListener("click",function(){ storeDel(b.getAttribute("data-id")).then(function(){ openSaved(); }); }); });
       }).catch(function(){ listEl.innerHTML='<div class="saved-empty">No se pudieron cargar las rutas.</div>'; }); }
 
-    function shareTrip(){ if(!trip.length) return; var route=lastRoute||[{ type:"origin", lat:origin.lat, lng:origin.lng }].concat(trip).concat(destination?[{ type:"dest", lat:destination.lat, lng:destination.lng }]:[]); var url=gmapsRoute(route); var lines=trip.map(function(p,i){ return (i+1)+". "+p.name; }); var text="Mi ruta en Cerca ("+trip.length+" paradas):\n"+lines.join("\n")+"\n\nGoogle Maps:\n"+url;
+    /* ---------- Compartir ruta por enlace (autocontenido, sin servidor) ---------- */
+    function b64urlEncode(str){ var b=btoa(unescape(encodeURIComponent(str))); return b.replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+    function b64urlDecode(str){ var b=str.replace(/-/g,"+").replace(/_/g,"/"); while(b.length%4) b+="="; return decodeURIComponent(escape(atob(b))); }
+    function encodeRouteToCode(o){
+      var c={ n:(o.name||"").slice(0,60), m:o.mode==="car"?1:0, t:o.minutes||20,
+        o:[+o.origin.lat.toFixed(5),+o.origin.lng.toFixed(5)],
+        d:o.destination?[+o.destination.lat.toFixed(5),+o.destination.lng.toFixed(5)]:null,
+        r:o.ordered?1:0,
+        s:(o.stops||[]).map(function(s){ return [+s.lat.toFixed(5),+s.lng.toFixed(5),(s.name||"").slice(0,40),s.cat||"curiosidad"]; }) };
+      return b64urlEncode(JSON.stringify(c)); }
+    function decodeRouteFromCode(code){
+      var c=JSON.parse(b64urlDecode(code));
+      if(!c||!c.o||!c.o.length) throw new Error("formato");
+      return { id:String(Date.now()), name:c.n||"Ruta compartida", created:Date.now(),
+        mode:c.m===1?"car":"walk", minutes:c.t||20,
+        origin:{ lat:c.o[0], lng:c.o[1] },
+        destination:c.d?{ lat:c.d[0], lng:c.d[1] }:null,
+        ordered:c.r===1,
+        stops:(c.s||[]).map(function(a,i){ return { id:"shared/"+i, name:a[2]||"Parada "+(i+1), cat:(a[3]&&CATS[a[3]])?a[3]:"curiosidad", lat:a[0], lng:a[1], wikipedia:null }; }) }; }
+    function buildShareLink(){ if(!origin||!trip.length) return null;
+      var name=trip.length+" paradas · "+(mode==="car"?"coche":"a pie");
+      var code=encodeRouteToCode(currentRouteObject(name));
+      var base=location.origin+location.pathname;
+      return base+"#r="+code; }
+    function tryLoadSharedRoute(){
+      var h=location.hash||""; var m=h.match(/[#&]r=([A-Za-z0-9\-_]+)/); if(!m) return false;
+      try{ var o=decodeRouteFromCode(m[1]);
+        try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+        loadRouteObject(o); showNotice("Ruta compartida cargada: "+o.stops.length+" paradas. Puedes editarla y guardarla.","ok"); return true;
+      }catch(e){ showNotice("El enlace de ruta no es válido o está incompleto.","warn"); return false; } }
+
+    function shareTrip(){ if(!trip.length) return; var route=lastRoute||[{ type:"origin", lat:origin.lat, lng:origin.lng }].concat(trip).concat(destination?[{ type:"dest", lat:destination.lat, lng:destination.lng }]:[]); var url=gmapsRoute(route); var lines=trip.map(function(p,i){ return (i+1)+". "+p.name; });
+      var appLink=buildShareLink();
+      var text="Mi ruta en Cerca ("+trip.length+" paradas):\n"+lines.join("\n");
+      if(appLink&&appLink.length<=1900){ text+="\n\nAbrir en Cerca (editable):\n"+appLink; }
+      else if(appLink){ showNotice("La ruta es muy larga para un enlace; se comparte solo con Google Maps.","warn"); }
+      text+="\n\nGoogle Maps:\n"+url;
       var clip=function(){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ showNotice("Ruta copiada al portapapeles.","ok"); }).catch(function(){ showNotice("No se pudo copiar aquí. Usa «Abrir en Google Maps».","warn"); }); } else showNotice("Compartir no disponible aquí. Usa «Abrir en Google Maps».","warn"); };
       if(navigator.share){ try{ var pr=navigator.share({ title:"Mi ruta — Cerca", text:text, url:url }); if(pr&&pr.catch) pr.catch(function(){ clip(); }); }catch(e){ clip(); } } else clip(); }
 
@@ -905,10 +1057,15 @@
       geocode(q).then(function(arr){
         if(!arr||!arr.length){ var empty=document.createElement("div"); empty.className="sr-empty"; empty.textContent="Sin resultados."; paintMatch(match?null:empty); return; }
         paintMatch(null);
-        arr.forEach(function(r){ var lat=parseFloat(r.lat), lng=parseFloat(r.lon); if(isNaN(lat)||isNaN(lng)) return; var it=document.createElement("button"); it.type="button"; it.className="sr-item"; it.innerHTML='<span class="sr-item__pin" aria-hidden="true">📍</span><span class="sr-item__txt">'+esc(r.display_name)+'</span>'; it.addEventListener("click",function(){ selectGeocode(lat,lng); }); box.appendChild(it); });
+        arr.forEach(function(r){ var lat=parseFloat(r.lat), lng=parseFloat(r.lon); if(isNaN(lat)||isNaN(lng)) return; var it=document.createElement("button"); it.type="button"; it.className="sr-item"; it.innerHTML='<span class="sr-item__pin" aria-hidden="true">📍</span><span class="sr-item__txt">'+esc(r.display_name)+'</span>'; it.addEventListener("click",function(){ selectGeocode(lat,lng,r.display_name); }); box.appendChild(it); });
       }).catch(function(){ var err=document.createElement("div"); err.className="sr-empty"; err.textContent="No se pudo buscar ahora (servidor o red). Prueba de nuevo."; paintMatch(err); }); }
-    function selectGeocode(lat,lng){ var box=byId("searchResults"); box.hidden=true; box.innerHTML=""; byId("placeSearch").value=""; byId("searchClear").hidden=true;
-      if(settingDestination){ setDestination(lat,lng); } else { setOrigin(lat,lng,"search"); } centerOn(lat,lng,14); }
+    function shortPlaceName(displayName){ var s=String(displayName||"").split(",")[0].trim(); return s.length>34?s.slice(0,34)+"…":s; }
+    function selectGeocode(lat,lng,displayName){ var box=byId("searchResults"); box.hidden=true; box.innerHTML=""; byId("placeSearch").value=""; byId("searchClear").hidden=true;
+      var nm=shortPlaceName(displayName);
+      if(settingDestination){ setDestination(lat,lng); }
+      else { setOrigin(lat,lng,"search",undefined,nm);
+        if(nm) showNotice("Punto de partida en "+nm+". Busca sitios como si estuvieras allí.","ok"); }
+      centerOn(lat,lng,14); }
 
     /* ---------- Persistencia de la clave ORS ---------- */
     function saveKey(v){ var k="cfg:orskey"; if(artifactStore){ try{ window.storage.set(k,v,false).catch(function(){}); }catch(e){} } else if(useLocal){ try{ window.localStorage.setItem(k,v); }catch(e){} } }
@@ -939,7 +1096,7 @@
       imgWrap.hidden=true; img.removeAttribute("src"); desc.textContent="Cargando información…";
       byId("pcReadMore").hidden=true; byId("pcReadMore").textContent="Leer más ▾"; byId("pcReadMore").disabled=false;
       byId("pcGallery").hidden=true; byId("pcGallery").innerHTML="";
-      updateCardAddBtn(); byId("pcMaps").href=gmapsSingle(poi);
+      updateCardAddBtn(); updateCardMarkBtns(); byId("pcMaps").href=gmapsSingle(poi);
       byId("pcGoogle").href="https://www.google.com/search?q="+encodeURIComponent(poi.name);
       byId("pcImages").href="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(poi.name);
       byId("pcGmaps").href="https://www.google.com/maps/search/"+encodeURIComponent(poi.name)+"/@"+poi.lat+","+poi.lng+",16z";
@@ -962,7 +1119,7 @@
       if(cardFull!==null){ show(); return; }
       Promise.all([ fullExtract(cardArticle.lang,cardArticle.title).catch(function(){ return ""; }), mediaImages(cardArticle.lang,cardArticle.title).catch(function(){ return []; }) ]).then(function(res){ if(currentCardPoi!==poiAt) return; cardFull=res[0]||cardSummary; cardImgs=res[1]||[]; show(); }).catch(function(){ btn.textContent="Leer más ▾"; btn.disabled=false; }); }
 
-    /* ---------- ¿Me da tiempo? (estimación local) ---------- */
+    /* ---------- Tiempo disponible: ¿cabe la ruta? (estimación local) ---------- */
     /* Trayecto = distancia en recta / velocidad, x1.3 (factor de rodeo recto→carretera) */
     function fmtHM(m){ var h=Math.floor(m/60), mm=m%60, s=""; if(h) s+=h+" h"; if(mm||!h) s+=(h?" ":"")+mm+" min"; return s; }
     function estTravelMin(route){ var tr=0; for(var i=0;i<route.length-1;i++){ tr+=haversine(route[i].lat,route[i].lng,route[i+1].lat,route[i+1].lng); } return (tr/1000)/SPEED_KMH[mode]*60*1.3; }
@@ -1025,7 +1182,7 @@
     function renderWeather(w){ var box=byId("weather"); if(!w||w.temp==null){ box.hidden=true; return; } var m=wmo(w.code); box.innerHTML='<span class="weather__emoji">'+m.emoji+'</span> '+m.label+' · <b>'+Math.round(w.temp)+'°</b>'+((w.max!=null&&w.min!=null)?' <span class="weather__mm">máx '+Math.round(w.max)+'° · mín '+Math.round(w.min)+'°</span>':''); box.hidden=false; }
     function updateWeather(){ if(!origin){ byId("weather").hidden=true; return; } if(weatherTimer) clearTimeout(weatherTimer); var lat=origin.lat, lng=origin.lng; weatherTimer=setTimeout(function(){ fetchWeather(lat,lng).then(function(w){ if(!origin||origin.lat!==lat||origin.lng!==lng) return; renderWeather(w); }).catch(function(){}); }, 700); }
 
-    /* ---------- Sorpréndeme (ruta automática que cabe en el tiempo) ---------- */
+    /* ---------- Planifica mi visita (itinerario automático que cabe en el tiempo) ---------- */
     function isNotable(p){ return !!(p.tags && (p.tags.wikipedia||p.tags.wikidata)); }
     function isAccessible(p){ var w=p.tags&&p.tags.wheelchair; return w==="yes"||w==="limited"; }
     function isFree(p){ return !(p.tags&&p.tags.fee==="yes"); }
@@ -1043,7 +1200,7 @@
         var iv=parseIntervals(rest); if(iv===null){ bail=true; break; } if(active){ known=true; var within=false; for(var k=0;k<iv.length;k++) if(inInterval(mins,iv[k])) within=true; state=within; } }
       if(bail) return null; if(!known) return false; return state; }
     function isOpenNow(p){ var v=p.tags&&p.tags.opening_hours; return v?ohOpenNow(v,new Date()):null; }
-    function passesFilters(p){ if(!activeCats.has(p.cat)) return false; if(advFilters.notable&&!isNotable(p)) return false; if(advFilters.accessible&&!isAccessible(p)) return false; if(advFilters.free&&!isFree(p)) return false; if(advFilters.open&&isOpenNow(p)!==true) return false; return true; }
+    function passesFilters(p){ if(!activeCats.has(p.cat)) return false; if(advFilters.notable&&!isNotable(p)) return false; if(advFilters.accessible&&!isAccessible(p)) return false; if(advFilters.free&&!isFree(p)) return false; if(advFilters.open&&isOpenNow(p)!==true) return false; if(advFilters.fav&&!isFav(p.id)) return false; if(advFilters.unseen&&isSeen(p.id)) return false; return true; }
     function sortShown(arr){ var a=arr.slice(); if(sortMode==="name") a.sort(function(x,y){ return String(x.name).localeCompare(String(y.name)); }); else if(sortMode==="notable") a.sort(function(x,y){ var nx=isNotable(x)?1:0, ny=isNotable(y)?1:0; if(ny!==nx) return ny-nx; return x.dist-y.dist; }); else a.sort(function(x,y){ return x.dist-y.dist; }); return a; }
     function surprise(){
       if(!pois.length){ showNotice("Primero busca sitios (pulsa «Buscar sitios»).","warn"); return; }
@@ -1054,19 +1211,19 @@
       var chosen=[], perCat={};
       function fits(arr){ var seq=[{ lat:origin.lat, lng:origin.lng }].concat(nearestNeighbor({ lat:origin.lat, lng:origin.lng },arr)).concat(destination?[{ lat:destination.lat, lng:destination.lng }]:[]); var vis=0; arr.forEach(function(p){ vis+=CATS[p.cat].visit; }); return vis+estTravelMin(seq)<=budget; }
       for(var i=0;i<pool.length && chosen.length<12;i++){ var p=pool[i]; if((perCat[p.cat]||0)>=3) continue; var trial=chosen.concat([p]); if(fits(trial)){ chosen=trial; perCat[p.cat]=(perCat[p.cat]||0)+1; } }
-      if(!chosen.length){ showNotice("No cabe ningún sitio en "+fmtHM(budget)+". Amplía el tiempo en «¿Me da tiempo?».","warn"); return; }
+      if(!chosen.length){ showNotice("No cabe ningún sitio en "+fmtHM(budget)+". Amplía el tiempo disponible justo debajo del botón.","warn"); return; }
       trip=chosen; updateCounts(); generateRoute(); setTab("trip");
-      showNotice("✨ Ruta sorpresa: "+chosen.length+" paradas para ~"+fmtHM(budget)+". Cambia el tiempo en «¿Me da tiempo?» y vuelve a pulsar.","ok");
+      showNotice("✨ Itinerario para "+fmtHM(budget)+": "+chosen.length+" paradas, con tiempo de visita y desplazamiento incluidos. Ajusta el tiempo disponible y vuelve a pulsar para recalcular.","ok");
     }
 
     /* ---------- Último origen (recordar por defecto) ---------- */
-    function saveOrigin(o){ var k="cfg:origin"; try{ if(artifactStore){ if(o) window.storage.set(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source}),false).catch(function(){}); else window.storage["delete"](k,false).catch(function(){}); } else if(useLocal){ if(o) window.localStorage.setItem(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source})); else window.localStorage.removeItem(k); } }catch(e){} }
+    function saveOrigin(o){ var k="cfg:origin"; try{ if(artifactStore){ if(o) window.storage.set(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source,placeName:o.placeName||null}),false).catch(function(){}); else window.storage["delete"](k,false).catch(function(){}); } else if(useLocal){ if(o) window.localStorage.setItem(k,JSON.stringify({lat:o.lat,lng:o.lng,source:o.source,placeName:o.placeName||null})); else window.localStorage.removeItem(k); } }catch(e){} }
     
     function loadOrigin(){ var k="cfg:origin"; try{ if(artifactStore){ return window.storage.get(k,false).then(function(r){ return r&&r.value?JSON.parse(r.value):null; }).catch(function(){ return null; }); } if(useLocal){ var s=window.localStorage.getItem(k); return Promise.resolve(s?JSON.parse(s):null); } }catch(e){} return Promise.resolve(null); }
     function resetApp(){
       removeDestination(); setSearchMode("near"); mode="walk"; setModeUI(); el.timeRange.value=20; el.timeVal.innerHTML='20 <small>min</small>';
       origin=null; if(beacon){ map.removeLayer(beacon); beacon=null; }
-      advFilters={notable:false,accessible:false,free:false,open:false}; activeCats=new Set();
+      advFilters={notable:false,accessible:false,free:false,open:false,fav:false,unseen:false}; activeCats=new Set();
       try{ Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.checked=false; }); }catch(e){}
       resetResults(); clearReach(); selPoi=null; savedMapView=null;
       el.originBox.classList.remove("is-set"); el.originLabel.textContent="Punto de partida"; el.originCoords.innerHTML='<span class="muted">Toca el mapa o pulsa GPS →</span>';
@@ -1106,6 +1263,59 @@
     el.reachBtn.addEventListener("click",searchPlaces);
     el.tabPlaces.addEventListener("click",function(){ setTab("places"); });
     el.tabTrip.addEventListener("click",function(){ setTab("trip"); });
+    /* ---------- Copia de seguridad (exportar / importar) ---------- */
+    function exportData(){
+      storeList().then(function(routes){
+        var data={ app:"cerca", version:1, exported:new Date().toISOString(),
+          marks:marks, routes:routes||[], origin:origin?{lat:origin.lat,lng:origin.lng,source:origin.source}:null };
+        var json=JSON.stringify(data,null,2);
+        var blob=new Blob([json],{ type:"application/json" });
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement("a");
+        var d=new Date(), stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+        a.href=url; a.download="cerca-copia-"+stamp+".json";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+        var nR=(routes||[]).length, nF=Object.keys(marks.fav).length, nV=Object.keys(marks.seen).length;
+        showNotice("Copia descargada: "+nR+" rutas, "+nF+" favoritos, "+nV+" visitados.","ok");
+      }).catch(function(){ showNotice("No se pudo crear la copia de seguridad.","warn"); });
+    }
+    function importData(file){
+      if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(){
+        var data;
+        try{ data=JSON.parse(reader.result); }
+        catch(e){ showNotice("El archivo no es una copia de Cerca válida.","warn"); return; }
+        if(!data||data.app!=="cerca"){ showNotice("El archivo no es una copia de Cerca válida.","warn"); return; }
+        var nR=(data.routes||[]).length, nF=data.marks&&data.marks.fav?Object.keys(data.marks.fav).length:0, nV=data.marks&&data.marks.seen?Object.keys(data.marks.seen).length:0;
+        if(!window.confirm("Se añadirán "+nR+" rutas, "+nF+" favoritos y "+nV+" visitados a los que ya tienes. ¿Continuar?")) return;
+        if(data.marks){
+          var f=data.marks.fav||{}, s=data.marks.seen||{};
+          Object.keys(f).forEach(function(k){ marks.fav[k]=f[k]; });
+          Object.keys(s).forEach(function(k){ marks.seen[k]=s[k]; });
+          saveMarks();
+        }
+        var pending=(data.routes||[]).filter(function(r){ return r&&r.id&&r.origin; });
+        Promise.all(pending.map(function(r){ return storeSet(r); })).then(function(){
+          if(pois.length) renderList();
+          showNotice("Copia restaurada: "+pending.length+" rutas, "+nF+" favoritos, "+nV+" visitados.","ok");
+          if(!byId("savedModal").hidden) openSaved();
+        }).catch(function(){ showNotice("Se restauraron las marcas, pero hubo un problema con las rutas.","warn"); });
+      };
+      reader.onerror=function(){ showNotice("No se pudo leer el archivo.","warn"); };
+      reader.readAsText(file);
+    }
+    byId("exportBtn").addEventListener("click",exportData);
+    byId("importBtn").addEventListener("click",function(){ byId("importFile").click(); });
+    byId("importFile").addEventListener("change",function(e){ var f=e.target.files&&e.target.files[0]; importData(f); e.target.value=""; });
+    byId("pcFav").addEventListener("click",function(){ if(currentCardPoi) toggleFav(currentCardPoi); });
+    byId("pcSeen").addEventListener("click",function(){ if(currentCardPoi) toggleSeen(currentCardPoi); });
+    byId("tripEmptyPlan").addEventListener("click",function(){
+      if(!origin){ setTab("places"); showNotice("Marca primero tu punto de partida (GPS, tocar el mapa o buscar un lugar).","warn"); return; }
+      if(!pois.length){ setTab("places"); showNotice("Elige categorías y pulsa «Buscar sitios»; después vuelve a intentarlo.","warn"); return; }
+      surprise();
+    });
     byId("surpriseBtn").addEventListener("click",surprise);
     Array.prototype.forEach.call(document.querySelectorAll("#filtersBox .filters__adv input"),function(cb){ cb.addEventListener("change",function(){ advFilters[cb.getAttribute("data-adv")]=cb.checked; renderMarkers(); renderList(); updateFiltersCount(); }); });
     byId("catsAllBtn").addEventListener("click",function(){ activeCats=new Set(Object.keys(CATS)); renderChips(); renderMarkers(); renderList(); });
@@ -1131,8 +1341,10 @@
     el.orsKey.addEventListener("change",function(){ saveKey(el.orsKey.value.trim()); });
     byId("isoToggle").addEventListener("change",function(){ useRealIso=byId("isoToggle").checked; });
     document.addEventListener("click",function(e){ var t=e.target; if(!t||!t.closest) return; var a=t.closest('a[target="_blank"]'); if(a){ var href=a.getAttribute("href")||""; if(/^https?:/i.test(href)){ e.preventDefault(); window.open(a.href,"_blank","noopener"); } } });
+    loadMarks().then(function(m){ if(m&&typeof m==="object"){ marks={ fav:m.fav||{}, seen:m.seen||{} }; if(pois.length) renderList(); } });
+    var sharedLoaded=tryLoadSharedRoute();
     loadKey().then(function(v){ if(v){ el.orsKey.value=v; } });
-    loadOrigin().then(function(o){ if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked"); centerOn(o.lat,o.lng,14); } });
+    loadOrigin().then(function(o){ if(sharedLoaded) return; if(o&&typeof o.lat==="number"){ setOrigin(o.lat,o.lng,o.source||"marked",undefined,o.placeName||null); centerOn(o.lat,o.lng,14); } });
     renderChips();
     byId("themeFab").addEventListener("click",toggleTheme);
     byId("resetFab").addEventListener("click",function(){ if(trip.length && !window.confirm("¿Reiniciar la app? Se borrará tu ruta actual ("+trip.length+" parada"+(trip.length===1?"":"s")+").")) return; resetApp(); });
@@ -1145,7 +1357,14 @@
     byId("pcBackdrop").addEventListener("click",function(){ byId("poiModal").hidden=true; restoreMapView(); });
     byId("pcAdd").addEventListener("click",function(){ if(currentCardPoi){ toggleTrip(currentCardPoi); updateCardAddBtn(); } });
     byId("pcMap").addEventListener("click",function(){ if(!currentCardPoi) return; byId("poiModal").hidden=true; var p=currentCardPoi; if(p._marker && poiLayer.zoomToShowLayer){ poiLayer.zoomToShowLayer(p._marker,function(){}); } else { centerOn(p.lat,p.lng,Math.max(map.getZoom(),15)); } });
-    byId("fitsRange").addEventListener("input",function(){ fitsBudgetMin=+byId("fitsRange").value; updateFits(); });
+    function syncBudgetUI(){ var t=byId("fitsRangeTop"), b=byId("fitsRange"), lbl=fmtHM(fitsBudgetMin);
+      if(t&&+t.value!==fitsBudgetMin) t.value=fitsBudgetMin;
+      if(b&&+b.value!==fitsBudgetMin) b.value=fitsBudgetMin;
+      var tv=byId("fitsBudgetValTop"); if(tv) tv.textContent=lbl;
+      var bv=byId("fitsBudgetVal"); if(bv) bv.textContent=lbl; }
+    byId("fitsRange").addEventListener("input",function(){ fitsBudgetMin=+byId("fitsRange").value; syncBudgetUI(); updateFits(); });
+    byId("fitsRangeTop").addEventListener("input",function(){ fitsBudgetMin=+byId("fitsRangeTop").value; syncBudgetUI(); updateFits(); });
+    syncBudgetUI();
     byId("pcReadMore").addEventListener("click",onReadMore);
 
     syncSheetHeight();
