@@ -570,7 +570,12 @@
 
     var SPEED_KMH={ walk:4.5, car:50 }, DISPLAY_CAP=150;
     var reachStyle={ color:"#FF4D8D", weight:2, opacity:.9, fillColor:"#FF4D8D", fillOpacity:.10 };
-    var OVERPASS=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+    /* Servidores Overpass, por orden de fiabilidad. El principal (overpass-api.de) va
+       el ÚLTIMO a propósito: es el más saturado del mundo y el que más rechaza peticiones.
+       kumi.systems / private.coffee son mirrors sin límite de tasa y mucho más tolerantes. */
+    var OVERPASS=["https://overpass.kumi.systems/api/interpreter",
+                  "https://overpass.private.coffee/api/interpreter",
+                  "https://overpass-api.de/api/interpreter"];
     var CATS={
       museo:{label:"Museos",color:"#7C3AED",visit:75,icon:"🏛️"}, monumento:{label:"Monumentos",color:"#F59E0B",visit:20,icon:"🗿"},
       ruinas:{label:"Ruinas",color:"#B45309",visit:45,icon:"🏰"}, iglesia:{label:"Iglesias",color:"#4F46E5",visit:20,icon:"⛪"},
@@ -727,8 +732,28 @@
         +'nwr["leisure"~"^(playground|fitness_centre|sports_centre|park|garden)$"]["name"]'+bb+";"
         +'nwr["shop"~"^(supermarket|mall|convenience|department_store)$"]["name"]'+bb+";"
         +");out center 500;"; }
-    function overpass(q){ return fetch(OVERPASS[0],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op "+r.status); return r.json(); })
-      .catch(function(){ return fetch(OVERPASS[1],{ method:"POST", body:q }).then(function(r){ if(!r.ok) throw new Error("op2 "+r.status); return r.json(); }); }); }
+    /* Prueba los servidores en orden. Si uno responde 429 (demasiadas peticiones) o 504
+       (saturado), pasa al siguiente; tras recorrerlos todos, espera y da una segunda vuelta,
+       porque la saturación suele durar solo unos segundos. */
+    function overpassOnce(url,q){
+      return fetch(url,{ method:"POST", body:q }).then(function(r){
+        if(!r.ok) throw new Error("op "+r.status);
+        return r.json();
+      });
+    }
+    function overpass(q,onRetry){
+      var intentos=[];
+      OVERPASS.forEach(function(u){ intentos.push({url:u,espera:0}); });
+      OVERPASS.forEach(function(u){ intentos.push({url:u,espera:2500}); });
+      var i=0;
+      function siguiente(ultimoError){
+        if(i>=intentos.length) return Promise.reject(ultimoError||new Error("overpass"));
+        var t=intentos[i++];
+        var arranca = t.espera ? new Promise(function(r){ if(onRetry) onRetry(); setTimeout(r,t.espera); }) : Promise.resolve();
+        return arranca.then(function(){ return overpassOnce(t.url,q); }).catch(function(e){ return siguiente(e); });
+      }
+      return siguiente();
+    }
     function ingest(data){ pois=[]; (data.elements||[]).forEach(function(m){ var lat=m.lat!=null?m.lat:(m.center&&m.center.lat), lng=m.lon!=null?m.lon:(m.center&&m.center.lon); if(lat==null||lng==null) return; if(!within(lat,lng)) return; var t=m.tags||{}; var nm=t.name; if(!nm){ if(t.amenity==="toilets") nm="Aseos públicos"; else if(t.amenity==="atm") nm="Cajero automático"; else if(t.amenity==="drinking_water") nm="Fuente de agua potable"; } if(!nm) return; pois.push({ id:m.type+"/"+m.id, name:nm, cat:classify(t), lat:lat, lng:lng, tags:t, dist:haversine(origin.lat,origin.lng,lat,lng) }); }); pois.sort(function(a,b){ return a.dist-b.dist; }); }
     /* Resultados a mostrar: filtrados y, si superan el cap, los N más cercanos de ENTRE los filtrados */
     function visiblePois(){ var f=pois.filter(passesFilters); return f.length>DISPLAY_CAP?f.slice(0,DISPLAY_CAP):f; }
@@ -1281,14 +1306,14 @@
     /* ---------- Buscar ---------- */
     function searchPlaces(){ if(!origin) return; var minutes=+el.timeRange.value; el.reachBtn.disabled=true; resetResults();
       buildReach().then(function(areaLabel){ showNotice("Buscando sitios en tu área…","info"); var b=_reachLayer.getBounds(), sw=b.getSouthWest(), ne=b.getNorthEast();
-        return overpass(overpassQuery(sw.lat,sw.lng,ne.lat,ne.lng)).then(function(data){ ingest(data);
+        return overpass(overpassQuery(sw.lat,sw.lng,ne.lat,ne.lng),function(){ showNotice("Los servidores de mapas están ocupados. Reintentando…","info"); }).then(function(data){ ingest(data);
           if(!pois.length){ showNotice("No se han encontrado sitios en esta área. Prueba a ampliar el tiempo o mover el punto.","warn"); }
           else { updateCounts(); renderChips(); renderMarkers(); setTab("places"); var vp=visiblePois();
             if(activeCats.size===0){ showNotice(pois.length+" sitios en el área — elige una categoría o usa un acceso rápido para verlos.","warn"); }
             else if(!vp.length){ showNotice("Ninguno de los sitios encontrados coincide con tus categorías activas.","warn"); }
             else { var cap=vp.length>=DISPLAY_CAP?" (los "+DISPLAY_CAP+" más cercanos)":""; showNotice(vp.length+" sitios · "+areaLabel+" · "+labelMode()+" "+minutes+" min"+cap,"ok"); } }
           el.reachBtn.disabled=false; });
-      }).catch(function(err){ el.reachBtn.disabled=false; if(err&&err.noDest){ showNotice("Para buscar por el camino, fija primero un destino: pulsa «Fijar destino» y toca el mapa.","warn"); return; } showNotice("No se pudieron cargar los sitios ahora (servidor ocupado o red). Inténtalo de nuevo en unos segundos.","warn"); }); }
+      }).catch(function(err){ el.reachBtn.disabled=false; if(err&&err.noDest){ showNotice("Para buscar por el camino, fija primero un destino: pulsa «Fijar destino» y toca el mapa.","warn"); return; } showNotice("No se han podido cargar los sitios: los servidores públicos de OpenStreetMap están saturados ahora mismo. Espera un minuto y vuelve a pulsar «Buscar sitios».","warn"); }); }
 
     /* ---------- Modo / tiempo ---------- */
     function setModeUI(){ var walk=mode==="walk"; el.modeWalk.classList.toggle("is-on",walk); el.modeWalk.setAttribute("aria-pressed",String(walk)); el.modeCar.classList.toggle("is-on",!walk); el.modeCar.setAttribute("aria-pressed",String(!walk)); }
